@@ -51,13 +51,19 @@ EOF
   ${EDITOR:-vi} "$NEW_DIR/.env"
 fi
 
-echo "===== 安装依赖（openpyxl 供 sync_feishu.py 使用） ====="
-python3 -m pip install --quiet openpyxl 2>&1 | tail -2 || pip install --quiet openpyxl 2>&1 | tail -2
+echo "===== 安装依赖（openpyxl 供 ingest.py/sync_feishu.py 使用） ====="
+# Ubuntu 24.04 系统 Python 受 PEP 668 保护，需 --break-system-packages
+python3 -m pip install --quiet --break-system-packages openpyxl 2>&1 | tail -3 || pip install --quiet --break-system-packages openpyxl 2>&1 | tail -3 || true
+python3 -c "import openpyxl; print('openpyxl OK', openpyxl.__version__)" 2>&1 || echo "⚠️ openpyxl 仍未就绪，点「数据更新」可能失败"
 
 echo "===== ③ 停掉旧进程，用新目录启动 server_cloud.js ====="
 pkill -f server_cloud.js || true
 sleep 1
 cd "$NEW_DIR"
+# server_cloud.js 只认 process.env，不会自动读 .env 文件，必须先把飞书凭证注入环境
+set -a
+[ -f "$NEW_DIR/.env" ] && source "$NEW_DIR/.env"
+set +a
 nohup node server_cloud.js > server.log 2>&1 &
 sleep 2
 CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://127.0.0.1:8788/ || echo 000)
@@ -69,6 +75,11 @@ cat > "$NEW_DIR/auto_pull.sh" <<'EOF'
 cd /opt/1688-dashboard
 git pull --ff-only
 pkill -f server_cloud.js
+sleep 1
+# 同样需注入 .env 中的飞书凭证
+set -a
+[ -f /opt/1688-dashboard/.env ] && source /opt/1688-dashboard/.env
+set +a
 nohup node server_cloud.js > server.log 2>&1 &
 EOF
 chmod +x "$NEW_DIR/auto_pull.sh"

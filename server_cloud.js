@@ -129,7 +129,14 @@ const server = http.createServer((req, res) => {
   }
 
   let rel = decodeURIComponent(u);
-  if (rel === '/' || rel === '/index.html') rel = '/index.html';
+  if (rel === '/') {
+    // 入口文件：优先 index.html，否则回退到看板本体 1688数字营销工作台.html
+    if (fs.existsSync(path.join(ROOT, 'index.html'))) rel = '/index.html';
+    else if (fs.existsSync(path.join(ROOT, '1688数字营销工作台.html'))) rel = '/1688数字营销工作台.html';
+    else rel = '/index.html';
+  } else if (rel === '/index.html') {
+    rel = '/index.html';
+  }
   if (rel === '/favicon.ico') {
     res.writeHead(204);
     return res.end();

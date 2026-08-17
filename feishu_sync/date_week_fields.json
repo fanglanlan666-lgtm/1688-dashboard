@@ -1,0 +1,627 @@
+{
+  "ok": true,
+  "identity": "user",
+  "data": {
+    "fields": [
+      {
+        "default_value": null,
+        "id": "fldcShHn8D",
+        "name": "SourceID",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "fldhnC4K8w",
+        "multiple": true,
+        "name": "周数",
+        "options": [
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "1A"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "1B"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "1C"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "1D"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "1E"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "2A"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "2B"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "2C"
+          },
+          {
+            "hue": "Carmine",
+            "lightness": "Lighter",
+            "name": "2D"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "2E"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "3A"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "3B"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "3C"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "3D"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "3E"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "4A"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "4B"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "4C"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "4D"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "5A"
+          },
+          {
+            "hue": "Carmine",
+            "lightness": "Lighter",
+            "name": "5B"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "5C"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "5D"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "5E"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "6A"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "6B"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "6C"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "6D"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "6E"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "7A"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "7B"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "7C"
+          },
+          {
+            "hue": "Carmine",
+            "lightness": "Lighter",
+            "name": "7D"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "8A"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "8B"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "8C"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "8D"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "8E"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "9A"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "9B"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "9C"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "9D"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "10A"
+          },
+          {
+            "hue": "Carmine",
+            "lightness": "Lighter",
+            "name": "10B"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "10C"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "10D"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "10E"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "11A"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "11B"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "11C"
+          }
+        ],
+        "remaining_options_count": 7,
+        "type": "select"
+      },
+      {
+        "default_value": null,
+        "id": "flduvAoiRv",
+        "multiple": false,
+        "name": "自然年",
+        "options": [
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "2024"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "2025"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "2026"
+          }
+        ],
+        "type": "select"
+      },
+      {
+        "default_value": null,
+        "id": "fld23L2WoA",
+        "name": "时间段-",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "fldv62Uo8x",
+        "multiple": false,
+        "name": "周",
+        "options": [
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "1A"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "1B"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "1C"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "1D"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "1E"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "2A"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "2B"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "2C"
+          },
+          {
+            "hue": "Carmine",
+            "lightness": "Lighter",
+            "name": "2D"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "2E"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "3A"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "3B"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "3C"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "3D"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "4A"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "4B"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "4C"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "4D"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "5A"
+          },
+          {
+            "hue": "Carmine",
+            "lightness": "Lighter",
+            "name": "5B"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "5C"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "5D"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "5E"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "6A"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "6B"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "6C"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "6D"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "7A"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "7B"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "7C"
+          },
+          {
+            "hue": "Carmine",
+            "lightness": "Lighter",
+            "name": "7D"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "8A"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "8B"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "8C"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "8D"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "8E"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "9A"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "9B"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "9C"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "9D"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "10A"
+          },
+          {
+            "hue": "Carmine",
+            "lightness": "Lighter",
+            "name": "10B"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "10C"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "10D"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "10E"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "11A"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "11B"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "11C"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "11D"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "12A"
+          }
+        ],
+        "remaining_options_count": 6,
+        "type": "select"
+      },
+      {
+        "default_value": null,
+        "id": "fldjmh7MKh",
+        "name": "季度",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "fldr40vEju",
+        "name": "星期",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "fldwV3hq3P",
+        "name": "时间段",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "fldkaMNqUm",
+        "name": "第N周",
+        "style": {
+          "percentage": false,
+          "precision": 0,
+          "thousands_separator": false,
+          "type": "plain"
+        },
+        "type": "number"
+      },
+      {
+        "default_value": null,
+        "id": "fld8DRmPVU",
+        "name": "日期",
+        "style": {
+          "format": "yyyy/MM/dd"
+        },
+        "type": "datetime"
+      }
+    ],
+    "total": 10
+  },
+  "_notice": {
+    "update": {
+      "command": "lark-cli update",
+      "current": "1.0.84",
+      "latest": "1.0.85",
+      "message": "lark-cli 1.0.85 available, current 1.0.84, run: lark-cli update"
+    }
+  }
+}

@@ -1,0 +1,632 @@
+{
+  "ok": true,
+  "identity": "user",
+  "data": {
+    "fields": [
+      {
+        "default_value": null,
+        "id": "fld8MRFTEv",
+        "name": "周平均气温",
+        "style": {
+          "percentage": false,
+          "precision": 1,
+          "thousands_separator": false,
+          "type": "plain"
+        },
+        "type": "number"
+      },
+      {
+        "default_value": null,
+        "id": "fldeHp0AFB",
+        "name": "周平均气温 副本",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "fldsWHFPXJ",
+        "name": "日期转文本",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "fld6VrhxPY",
+        "name": "序号-天",
+        "style": {
+          "percentage": false,
+          "precision": 0,
+          "thousands_separator": false,
+          "type": "plain"
+        },
+        "type": "number"
+      },
+      {
+        "default_value": null,
+        "id": "fld4FCcH6B",
+        "name": "日期",
+        "style": {
+          "format": "yyyy/MM/dd"
+        },
+        "type": "datetime"
+      },
+      {
+        "default_value": null,
+        "id": "fldybshmxu",
+        "name": "日平均气温",
+        "style": {
+          "percentage": false,
+          "precision": 1,
+          "thousands_separator": false,
+          "type": "plain"
+        },
+        "type": "number"
+      },
+      {
+        "default_value": null,
+        "id": "fldtRsSTea",
+        "multiple": false,
+        "name": "周几",
+        "options": [
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "周一"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "周二"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "周三"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "周四"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "周五"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "周六"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "周日"
+          }
+        ],
+        "type": "select"
+      },
+      {
+        "default_value": null,
+        "id": "fldkCq4f8R",
+        "multiple": true,
+        "name": "周",
+        "options": [
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "1A"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "1B"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "1C"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "1D"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "1E"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "2A"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "2B"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "2C"
+          },
+          {
+            "hue": "Carmine",
+            "lightness": "Lighter",
+            "name": "2D"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "2E"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "3A"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "3B"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "3C"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "3D"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "3E"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "4A"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "4B"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "4C"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "4D"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "5A"
+          },
+          {
+            "hue": "Carmine",
+            "lightness": "Lighter",
+            "name": "5B"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "5C"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "5D"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "5E"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "6A"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "6B"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "6C"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "6D"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "6E"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "7A"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "7B"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "7C"
+          },
+          {
+            "hue": "Carmine",
+            "lightness": "Lighter",
+            "name": "7D"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "8A"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "8B"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "8C"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "8D"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "8E"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "9A"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Lighter",
+            "name": "9B"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "9C"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "9D"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "10A"
+          },
+          {
+            "hue": "Carmine",
+            "lightness": "Lighter",
+            "name": "10B"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "10C"
+          },
+          {
+            "hue": "Gray",
+            "lightness": "Lighter",
+            "name": "10D"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "10E"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "11A"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "11B"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Lighter",
+            "name": "11C"
+          }
+        ],
+        "remaining_options_count": 7,
+        "type": "select"
+      },
+      {
+        "default_value": null,
+        "id": "fldlvGKBqc",
+        "name": "城市",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "fldbDulJOl",
+        "name": "最低气温",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "fldnSwohgH",
+        "multiple": false,
+        "name": "区域",
+        "options": [
+          {
+            "hue": "Wathet",
+            "lightness": "Standard",
+            "name": "东北"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Standard",
+            "name": "华北"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Standard",
+            "name": "华东"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Light",
+            "name": "华中"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Dark",
+            "name": "西南"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Light",
+            "name": "西北"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Standard",
+            "name": "华南"
+          }
+        ],
+        "type": "select"
+      },
+      {
+        "default_value": null,
+        "id": "fld7U5u2iY",
+        "name": "日期文本",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "fld39HnZ0z",
+        "multiple": true,
+        "name": "节气",
+        "options": [
+          {
+            "hue": "Green",
+            "lightness": "Lighter",
+            "name": "立春"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Lighter",
+            "name": "雨水"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Light",
+            "name": "惊蛰"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Light",
+            "name": "春分"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Dark",
+            "name": "清明"
+          },
+          {
+            "hue": "Lime",
+            "lightness": "Dark",
+            "name": "谷雨"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Lighter",
+            "name": "立夏"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Lighter",
+            "name": "小满"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Light",
+            "name": "芒种"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Light",
+            "name": "夏至"
+          },
+          {
+            "hue": "Orange",
+            "lightness": "Dark",
+            "name": "小暑"
+          },
+          {
+            "hue": "Red",
+            "lightness": "Dark",
+            "name": "大暑"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Standard",
+            "name": "立秋"
+          },
+          {
+            "hue": "Yellow",
+            "lightness": "Light",
+            "name": "处暑"
+          },
+          {
+            "hue": "Turquoise",
+            "lightness": "Light",
+            "name": "白露"
+          },
+          {
+            "hue": "Green",
+            "lightness": "Light",
+            "name": "秋分"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Light",
+            "name": "寒露"
+          },
+          {
+            "hue": "Purple",
+            "lightness": "Lighter",
+            "name": "霜降"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Lighter",
+            "name": "立冬"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Lighter",
+            "name": "小雪"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Light",
+            "name": "大雪"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Light",
+            "name": "冬至"
+          },
+          {
+            "hue": "Blue",
+            "lightness": "Dark",
+            "name": "小寒"
+          },
+          {
+            "hue": "Wathet",
+            "lightness": "Dark",
+            "name": "大寒"
+          }
+        ],
+        "type": "select"
+      },
+      {
+        "default_value": null,
+        "id": "fldzkKhiAc",
+        "name": "气温范围",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "flddqgiolu",
+        "name": "最高气温",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "fldLYRgzCc",
+        "name": "SourceID",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      },
+      {
+        "default_value": null,
+        "id": "fldnbq2BNT",
+        "name": "序号",
+        "style": {
+          "percentage": false,
+          "precision": 0,
+          "thousands_separator": false,
+          "type": "plain"
+        },
+        "type": "number"
+      },
+      {
+        "default_value": null,
+        "id": "fldnFxOn3M",
+        "name": "周数及日期区间",
+        "style": {
+          "type": "plain"
+        },
+        "type": "text"
+      }
+    ],
+    "total": 18
+  },
+  "_notice": {
+    "update": {
+      "command": "lark-cli update",
+      "current": "1.0.84",
+      "latest": "1.0.85",
+      "message": "lark-cli 1.0.85 available, current 1.0.84, run: lark-cli update"
+    }
+  }
+}

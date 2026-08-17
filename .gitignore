@@ -1,0 +1,50 @@
+# ===== 敏感信息（绝不入库） =====
+.env
+
+# ===== Python 依赖 / 缓存 =====
+.pypkgs/
+__pycache__/
+
+# ===== 构建 / 部署产物 =====
+发布版/
+云部署包/
+
+# ===== 本地项目记忆 =====
+.workbuddy/
+
+# ===== 日志 =====
+*.log
+
+# ===== 临时数据 / 导出草稿（非运行必需） =====
+pg_*.json
+fl_*.json
+fl.json
+R_cat.json
+m2_style.json
+xq6_all.json
+feishu_rec.json
+feishu_err.txt
+fl_err.txt
+chk_xq6.json
+nul
+data.js.bak_*
+*.json.bak
+_sshdeps/
+github_deploy_key.txt
+
+# ===== 截图 / 验证图（非运行必需） =====
+verify_*.png
+daily_card_preview.png
+dashboard_full.png
+dashboard_overview.png
+lark_auth_qr.png
+
+# ===== 无关目录 =====
+shots/
+导出/
+
+# ===== 业务报表 xlsx（非运行必需），保留映射/主图等必需项 =====
+*.xlsx
+!映射/*.xlsx
+!产品主图.xlsx
+!Method1_映射候选.xlsx

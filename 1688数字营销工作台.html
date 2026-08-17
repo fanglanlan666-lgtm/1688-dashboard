@@ -1,0 +1,2777 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1688 数字营销工作台</title>
+<style>
+  :root{
+    --bg:#eef1f6; --card:#ffffff; --line:#e7ebf2; --text:#1d2533; --sub:#7b8798;
+    --brand:#ff6a00; --brand2:#ff9a3d; --blue:#2f6bff; --green:#15a35a; --red:#e23b3b;
+    --orange:#f59e0b; --purple:#7c3aed; --shadow:0 1px 3px rgba(20,30,50,.06),0 6px 18px rgba(20,30,50,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
+    background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .app{max-width:1300px;margin:0 auto;padding:20px 18px 40px}
+  /* Hero */
+  .hero{background:linear-gradient(120deg,#ff7a1a 0%,#ff5e3a 55%,#ff4d6d 100%);
+    border-radius:18px;padding:22px 26px;color:#fff;display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:14px;box-shadow:0 10px 30px rgba(255,90,40,.25)}
+  .hero h1{font-size:22px;font-weight:800;letter-spacing:.5px;display:flex;align-items:center;gap:10px}
+  .hero .sub{font-size:12.5px;opacity:.9;margin-top:4px}
+  .hero .meta{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:rgba(255,255,255,.18);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.25);
+    color:#fff;font-size:12px;padding:5px 12px;border-radius:20px}
+  /* Panel */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:16px;box-shadow:var(--shadow)}
+  .panel h3{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .panel h3 .dot{width:8px;height:8px;border-radius:3px;background:var(--brand)}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .grid2{display:grid;grid-template-columns:1.9fr 1fr;gap:16px;margin-bottom:16px}
+  .grid2b{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  @media(max-width:900px){.grid2,.grid2b{grid-template-columns:1fr}}
+  /* Filters */
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:end}
+  label{font-size:12px;color:var(--sub);display:block;margin-bottom:5px;font-weight:600}
+  select,input[type=text],input[type=date],input[type=number]{
+    border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:13px;background:#fff;color:var(--text);width:100%;
+    transition:border-color .15s,box-shadow .15s}
+  select:focus,input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(255,106,0,.12)}
+  /* Segmented control */
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f4f6fa}
+  .seg button{border:0;background:transparent;padding:7px 15px;font-size:13px;cursor:pointer;color:var(--sub);font-weight:600;transition:.15s}
+  .seg button:hover{color:var(--text)}
+  .seg button.on{background:linear-gradient(120deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 2px 8px rgba(255,106,0,.3)}
+  .seg.mini button{padding:5px 10px;font-size:12px}
+  .btn.mini{padding:5px 11px;font-size:12px;border-radius:8px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 14px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);transition:.15s}
+  .btn:hover{border-color:var(--brand);color:var(--brand)}
+  .btn.primary{background:linear-gradient(120deg,var(--brand),var(--brand2));color:#fff;border-color:transparent;box-shadow:0 2px 10px rgba(255,106,0,.25)}
+  .btn.ghost{background:#f4f6fa}
+  /* KPI */
+  .kpis{display:flex;flex-direction:column;gap:14px;margin-bottom:16px}
+  .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:border-color .15s}
+  .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--brand)}
+  .kpi .t{font-size:12px;color:var(--sub);font-weight:600}
+  .kpi .v{font-size:23px;font-weight:800;margin-top:6px;letter-spacing:.3px}
+  .kpi .v small{font-size:12px;font-weight:600;color:var(--sub)}
+  .kpi .d{font-size:11.5px;margin-top:4px;color:var(--sub)}
+  .kpi-row-title{font-size:12.5px;font-weight:800;margin:2px 0 -4px 2px;display:flex;align-items:center;gap:6px}
+  .kpi-row-title::before{content:"";width:14px;height:3px;border-radius:2px;background:var(--brand)}
+  /* KPI 三组统一配色：核心规模(蓝) / 转化与投产(绿) / 单位成本(橙) */
+  .kpi-row.scale .kpi{border-color:#cdddff} .kpi-row.scale .kpi::before{background:var(--blue)}
+  .kpi-row.conv  .kpi{border-color:#c9efd8} .kpi-row.conv  .kpi::before{background:var(--green)}
+  .kpi-row.cost  .kpi{border-color:#ffe6c2} .kpi-row.cost  .kpi::before{background:var(--orange)}
+  .kpi-row-title.scale{color:var(--blue)}   .kpi-row-title.scale::before{background:var(--blue)}
+  .kpi-row-title.conv{color:var(--green)}   .kpi-row-title.conv::before{background:var(--green)}
+  .kpi-row-title.cost{color:var(--orange)}  .kpi-row-title.cost::before{background:var(--orange)}
+  /* 商品主图 */
+  .thumb{width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#f4f6fa;display:block}
+  .thumb-wrap{display:flex;align-items:center;gap:8px}
+  /* Progress */
+  .barwrap{height:13px;background:#eef1f6;border-radius:8px;overflow:hidden;margin:10px 0 6px}
+  .barfill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));width:0;transition:width .4s}
+  .barfill.over{background:linear-gradient(90deg,#e23b3b,#ff7a7a)}
+  .progress-txt{font-size:12px;color:var(--sub)}
+  /* Table */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:9px 11px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--sub);font-weight:700;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--card);z-index:1}
+  th:hover{color:var(--brand)}
+  tbody tr:hover{background:#f7f9fc}
+  tbody tr:nth-child(even){background:#fafbfd}
+  .tag{display:inline-block;padding:2px 9px;border-radius:7px;font-size:12px;font-weight:600}
+  .tag.g{background:#e6f7ee;color:var(--green)} .tag.m{background:#fff4e0;color:var(--orange)} .tag.r{background:#fdeaea;color:var(--red)}
+  .chart{width:100%}
+  .muted{color:var(--sub);font-size:12.5px;padding:18px 0;text-align:center}
+  .tip{font-size:12px;color:var(--sub);margin-top:8px}
+  textarea{width:100%;min-height:88px;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:12px;font-family:monospace}
+  details{margin-top:4px}
+  /* AI */
+  .ai-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .ai-icon{background:linear-gradient(135deg,#2f6bff,#7c3aed);color:#fff;width:30px;height:30px;border-radius:9px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 10px rgba(80,60,220,.3)}
+  .ai-head strong{font-size:16px}
+  .ai-head .ai-sub{font-size:12px;color:var(--sub);margin-left:auto;text-align:right}
+  .ai-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin-bottom:14px}
+  .ai-card{background:linear-gradient(180deg,#fbfcff,#f5f7ff);border:1px solid #e6ebfb;border-radius:12px;padding:12px 14px}
+  .ai-card .t{font-size:12px;color:var(--sub);font-weight:600}
+  .ai-card .v{font-size:20px;font-weight:800;margin-top:4px}
+  .ai-card .d{font-size:12px;margin-top:3px}
+  .ai-list{display:flex;flex-direction:column;gap:11px}
+  .ai-item{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fbfcfe}
+  .ai-item .ic{flex:0 0 auto;width:24px;height:24px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;margin-top:1px}
+  .ai-item.good .ic{background:#e6f7ee;color:var(--green)} .ai-item.warn .ic{background:#fff4e0;color:var(--orange)}
+  .ai-item.bad .ic{background:#fdeaea;color:var(--red)} .ai-item.info .ic{background:#eaf0ff;color:var(--blue)}
+  .ai-item .tx{flex:1;font-size:13px;line-height:1.6}
+  .ai-item .tx b{color:var(--text)} .ai-item .tx .hi{color:var(--brand);font-weight:700}
+  .ai-item .tx .grn{color:var(--green);font-weight:700} .ai-item .tx .red{color:var(--red);font-weight:700}
+  .up{color:var(--red)} .down{color:var(--green)}
+  .barclick{cursor:pointer} .barclick:hover{opacity:.85}
+  .sel-hint{display:inline-block;background:#fff4e0;color:var(--orange);font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:7px;margin-left:6px}
+  summary{cursor:pointer;font-weight:700;font-size:14px}
+  code{background:#f0f2f7;padding:1px 5px;border-radius:5px;font-size:12px}
+  /* 预算确认 / 日期筛选 / 行动项 */
+  .panel-budget-actions{margin-top:12px;display:flex;gap:8px;align-items:center}
+  .daily-date{display:inline-flex;align-items:center;gap:6px;margin-left:auto}
+  .daily-date label{margin:0;font-size:12px;color:var(--sub);font-weight:600}
+  .pri{flex:0 0 auto;font-size:11px;font-weight:700;padding:1px 8px;border-radius:7px;white-space:nowrap}
+  .pri.h{background:#fdeaea;color:var(--red)} .pri.m{background:#fff4e0;color:var(--orange)} .pri.l{background:#e6f7ee;color:var(--green)}
+  .ai-sec-title{font-size:14px;font-weight:800;margin:18px 0 10px;display:flex;align-items:center;gap:8px;color:var(--text)}
+  .ai-sec-title::before{content:"";width:4px;height:16px;border-radius:3px;background:var(--purple)}
+  /* 预算设置 */
+  .plan-budgets{display:flex;flex-wrap:wrap;gap:10px}
+  .pb-item{display:flex;align-items:center;gap:6px;background:#f7f9fc;border:1px solid var(--line);border-radius:9px;padding:5px 10px}
+  .pb-item label{margin:0;font-size:12px;color:var(--sub);font-weight:600;white-space:nowrap}
+  .pb-item input{width:96px;border:1px solid var(--line);border-radius:7px;padding:5px 7px;font-size:12px;background:#fff}
+  /* 预算执行（置于周期预算设置下方） */
+  .budget-exec{margin-top:16px;padding-top:16px;border-top:1px dashed var(--line)}
+  .budget-exec-title{font-size:14px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px;color:var(--text)}
+  /* 明细双段 */
+  .sub-title{font-size:13px;font-weight:700;margin:14px 0 6px;color:var(--text);display:flex;align-items:center;gap:7px}
+  .sub-title::before{content:"";width:4px;height:15px;border-radius:3px;background:var(--brand)}
+  .sub-title.s2::before{background:var(--blue)}
+  .sub-title .cnt{font-size:12px;color:var(--sub);font-weight:500}
+  .dtable-wrap{max-height:360px;overflow:auto}
+  /* 分组折叠 */
+  .grp-row{cursor:pointer;font-weight:600;background:#f3f6fc}
+  .grp-row:hover{background:#eaf0fb}
+  .sub-row{background:#fbfcfe}
+  .sub-row td:first-child,.sub-row .grp-col{box-shadow:inset 16px 0 0 #eef2f9}
+  .grp-col{width:28px;text-align:center;color:var(--sub);cursor:pointer;user-select:none}
+  .tw{display:inline-block;font-size:11px;color:var(--brand);transition:transform .15s}
+  td.title-cell{text-align:left}
+  .export-bar{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .quick-range{display:flex;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap}
+  .quick-range .qr{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--sub);transition:.15s}
+  .quick-range .qr:hover{border-color:var(--brand);color:var(--brand)}
+  .quick-range .qr.on{background:linear-gradient(120deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+  .chart .pt{cursor:pointer}
+  .chart .pt:hover{stroke:#ff6a00;stroke-width:2}
+
+  /* 顶部导航（营销 / 目标达成） */
+  .topnav{display:flex;gap:10px;margin-top:14px}
+  .topnav button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 18px;cursor:pointer;font-size:14px;font-weight:700;color:var(--sub);transition:.15s}
+  .topnav button.on{background:linear-gradient(120deg,var(--brand),var(--brand2));color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(255,106,0,.28)}
+  .topnav button.sync-btn{margin-left:auto;display:inline-flex;align-items:center;gap:7px;background:#fff;color:var(--sub);border-color:var(--line);font-weight:700}
+  .topnav button.sync-btn .sync-dot{width:8px;height:8px;border-radius:50%;background:#c2cad6;flex:0 0 auto;transition:.2s;box-shadow:0 0 0 0 rgba(0,0,0,0)}
+  .topnav button.sync-btn:hover{background:#fff7f0;border-color:var(--brand);color:var(--brand)}
+  .topnav button.sync-btn:disabled{opacity:.85;cursor:default}
+  .topnav button.sync-btn.ready{color:var(--brand);border-color:var(--brand)}
+  .topnav button.sync-btn.ready .sync-dot{background:#15a35a;box-shadow:0 0 0 3px rgba(21,163,90,.16)}
+  .topnav button.sync-btn.syncing .sync-dot{background:#f59e0b;animation:syncPulse 1s ease-in-out infinite}
+  .topnav button.sync-btn.offline{color:#9aa2ad;border-color:var(--line)}
+  .topnav button.sync-btn.offline .sync-dot{background:#c2cad6}
+  @keyframes syncPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+  .sync-banner{display:flex;gap:10px;align-items:flex-start;background:#fff7f0;border:1px solid #ffd4b3;border-left:5px solid var(--brand);border-radius:12px;padding:12px 16px;margin-top:12px}
+  .sync-banner .sb-ic{font-size:18px;line-height:1.4}
+  .sync-banner .sb-tx{font-size:13px;line-height:1.65;flex:1}
+  .sync-banner b{color:var(--brand)}
+  .sync-banner code{background:#ffefe2;padding:1px 5px;border-radius:4px;font-size:12px}
+  .sync-banner .sb-close{margin-left:auto;background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;line-height:1}
+
+  /* 目标达成视图 —— KPI 分组：统一白底 + 浅灰边框，不用色条/彩底，颜色只落在数值上 */
+  /* 组宽严格按卡片数比例(flex-basis:0)，组间/组内 gap 一致 → 8 张卡等宽等高排成一行 */
+  .tkpi-groups{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px;align-items:stretch}
+  .tkpi-group{flex:var(--w,3) 1 0;min-width:0;display:flex;flex-direction:column}
+  .tkpi-group-title{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.4px;margin:0 0 8px 2px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+  .tkpi-group-title::after{content:"";flex:1;height:1px;background:var(--line)}
+  .tkpi-row{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:14px;flex:1}
+  .tkpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:98px}
+  .tkpi .t{font-size:12px;color:var(--sub);font-weight:600;line-height:1.35}
+  .tkpi .v{font-size:clamp(18px,1.45vw,22px);font-weight:800;margin-top:8px;line-height:1.15;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px}
+  .tkpi .v.warn{color:var(--red)} .tkpi .v.good{color:var(--green)} .tkpi .v.cost{color:var(--orange)}
+  .tkpi .d{font-size:11.5px;margin-top:auto;padding-top:6px;color:var(--sub);min-height:16px;line-height:1.35}
+  .tkpi .v small{font-size:12px;font-weight:600;color:var(--sub)}
+  /* 窄屏：整组换行占满一行，组内仍保持等分，不出现单卡孤行 */
+  @media(max-width:1240px){ .tkpi-group{flex:1 1 100%} }
+  @media(max-width:560px){ .tkpi-row{grid-template-columns:repeat(2,minmax(0,1fr))} }
+
+  /* 风险面板 */
+  .risk-box{background:linear-gradient(180deg,#fff,#fff8f6);border:1px solid #ffd9c8;border-radius:14px;padding:14px 16px;margin-bottom:16px}
+  .risk-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .risk-badge{font-size:13px;font-weight:800;padding:4px 12px;border-radius:20px;color:#fff}
+  .risk-badge.high{background:#e23c22} .risk-badge.med{background:#f08a00} .risk-badge.low{background:#1aa179} .risk-badge.good{background:#1aa179}
+  .risk-list{display:flex;flex-direction:column;gap:8px}
+  .risk-item{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .risk-item.high{border-left:4px solid #e23c22} .risk-item.med{border-left:4px solid #f08a00} .risk-item.low{border-left:4px solid #f5c518} .risk-item.good{border-left:4px solid #1aa179}
+  .risk-item .ric{font-size:16px;line-height:1.3} .risk-item .rt{font-weight:700;font-size:13px} .risk-item .rx{font-size:12.5px;color:var(--sub);margin-top:2px}
+
+  /* 目标对照表 完成率着色 */
+  .rate-good{color:#1aa179;font-weight:700} .rate-mid{color:#f08a00;font-weight:700} .rate-bad{color:#e23c22;font-weight:700}
+  .ratebar{position:relative;height:16px;background:#eef1f6;border-radius:8px;overflow:hidden;min-width:64px}
+  .ratebar>i{position:absolute;left:0;top:0;bottom:0;border-radius:8px}
+  .ratebar.good>i{background:#1aa179} .ratebar.mid>i{background:#f08a00} .ratebar.bad>i{background:#e23c22}
+  .ratecell{display:flex;align-items:center;gap:6px}
+  .ratecell .rv{font-size:11.5px;font-weight:700}
+  .rhythm-tag{font-size:11px;color:#7a4cc0;background:#f1e9fc;border-radius:6px;padding:1px 6px;white-space:nowrap}
+
+  /* 数据异常提醒横幅 */
+  .anomaly-banner{display:flex;gap:10px;align-items:flex-start;background:#fff4f4;border:1px solid #ffc9c9;border-left:5px solid var(--red);border-radius:12px;padding:12px 16px;margin-top:16px}
+  .anomaly-banner .ab-ic{font-size:18px;line-height:1.4}
+  .anomaly-banner .ab-tx{font-size:13px;line-height:1.65}
+  .anomaly-banner b{color:var(--red)}
+  .anomaly-banner .ab-list{margin-top:5px;color:var(--sub);font-size:12.5px}
+  .anomaly-banner code{background:#fdeaea}
+
+  /* 数据更新日期置顶提示 */
+  .data-asof-bar{display:flex;align-items:center;gap:9px;background:linear-gradient(0deg,#f5f9ff,#eef4ff);border:1px solid #d7e3ff;border-left:4px solid var(--blue);border-radius:12px;padding:10px 15px;margin-bottom:14px;font-size:13.5px;color:#33415c}
+  .data-asof-bar .da-ic{font-size:16px;flex:0 0 auto}
+  .data-asof-bar .da-tx{line-height:1.4}
+  .data-asof-bar b{color:var(--blue);font-weight:800;font-size:14px}
+  .data-asof-bar .da-sub{color:#8a98b5;font-size:12px;margin-left:2px}
+
+  /* 计划消耗占比环形图 */
+  .donut-wrap{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-top:4px}
+  .donut-legend{flex:1;min-width:190px;display:flex;flex-direction:column;gap:7px}
+  .dl-item{display:flex;align-items:center;gap:8px;font-size:12.5px}
+  .dl-dot{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+  .dl-label{flex:1;color:var(--text);font-weight:600}
+  .dl-val{color:var(--sub);font-weight:700}
+
+  /* 气温 AI 提醒 */
+  .wx-ai-title{font-size:13.5px;font-weight:800;margin:16px 0 4px;display:flex;align-items:center;gap:8px;color:var(--text)}
+  .wx-ai-title::before{content:"";width:4px;height:15px;border-radius:3px;background:var(--orange)}
+  .wx-ai-item{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px}
+  .wx-ai-item .wic{flex:0 0 auto;width:24px;height:24px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:15px}
+  .wx-ai-item.cool .wic{background:#eaf0ff;color:#2f6bff}
+  .wx-ai-item.warm .wic{background:#fff1e6;color:#e8762b}
+  .wx-ai-item .wtx{font-size:12.5px;line-height:1.65;flex:1}
+  .wx-ai-item .wtx b{color:var(--text)}
+  /* 预算执行 AI 提醒 */
+  .budget-ai{margin-top:14px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.7;display:flex;gap:10px;align-items:flex-start}
+  .budget-ai .bi-ic{flex:0 0 auto;width:26px;height:26px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:15px}
+  .budget-ai.ok{background:#f3fcf6;border:1px solid #bfe9cf}
+  .budget-ai.ok .bi-ic{background:#e6f7ee;color:var(--green)}
+  .budget-ai.alert{background:#fff4f4;border:1px solid #ffc9c9;border-left:5px solid var(--red)}
+  .budget-ai.alert .bi-ic{background:#fdeaea;color:var(--red)}
+  .budget-ai b{font-weight:800}
+  .budget-ai .big{font-size:15px;font-weight:800;color:var(--red);margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 数据更新日期置顶提示 -->
+  <div id="dataAsOfBar" class="data-asof-bar">
+    <span class="da-ic">📅</span>
+    <span class="da-tx" id="dataAsOfText">数据加载中…</span>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div>
+      <h1>📊 1688 数字营销工作台</h1>
+    </div>
+    <div class="meta">
+      <span class="chip" id="srcBadge">数据源：示例</span>
+      <span class="chip" id="rowBadge">0 条</span>
+      <span class="chip" id="weatherChip" style="display:none"></span>
+    </div>
+  </div>
+
+  <!-- 顶部导航 -->
+  <div class="topnav">
+    <button data-view="marketing" class="on">📈 1688 营销</button>
+    <button data-view="target">🎯 目标达成</button>
+    <button data-view="weekly">📅 推广周报</button>
+    <button data-view="monthly">📆 推广月报</button>
+    <button data-view="weather">🌤 气温趋势</button>
+    <button data-view="insight">📊 经营洞察</button>
+    <button id="btnSync" class="sync-btn"><span class="sync-dot"></span><span class="sync-txt">数据更新</span></button>
+  </div>
+
+  <!-- 数据异常提醒横幅（条件显示） -->
+  <div id="anomalyBanner" class="anomaly-banner" style="display:none"></div>
+  <!-- 本地同步服务提示横幅（条件显示） -->
+  <div id="syncBanner" class="sync-banner" style="display:none"></div>
+
+  <!-- Filters -->
+  <div id="marketingView">
+  <div class="panel" style="margin-top:16px">
+    <div class="filters">
+      <div><label>开始日期</label><input type="date" id="dateFrom"></div>
+      <div><label>结束日期</label><input type="date" id="dateTo"></div>
+      <div><label>计划筛选（下钻）</label>
+        <select id="planFilter"><option value="">全部计划</option></select></div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <button class="btn primary" id="btnApply">筛选确认</button>
+        <button class="btn ghost" id="btnClear">清除筛选</button>
+      </div>
+    </div>
+    <div class="quick-range">
+      <span class="tip" style="margin:0 4px 0 0">快捷选择：</span>
+      <button class="qr" data-r="month">本月</button>
+      <button class="qr" data-r="7">近7天</button>
+      <button class="qr" data-r="today">昨天</button>
+      <button class="qr" data-r="all">全部</button>
+      <span class="tip" id="qrHint" style="margin-left:6px"></span>
+    </div>
+  </div>
+
+  <!-- 周期预算设置（独立成行） -->
+  <div class="panel">
+    <h3><span class="dot" style="background:var(--orange)"></span>周期预算设置
+      <span class="tip" style="margin-left:auto;font-weight:600;color:var(--sub)">按月保存 · 自动累计总预算</span>
+    </h3>
+    <div class="row" style="align-items:flex-start">
+      <div style="min-width:170px">
+        <label>预算月份</label>
+        <div style="display:flex;gap:6px">
+          <select id="budgetYear" style="flex:1"></select>
+          <select id="budgetMonth" style="flex:1"></select>
+        </div>
+      </div>
+      <div style="flex:1;min-width:260px">
+        <label>各计划预算 (元) — 总预算自动求和</label>
+        <div id="planBudgets" class="plan-budgets"></div>
+      </div>
+      <div style="min-width:150px">
+        <label>总预算 (自动)</label>
+        <div id="budgetTotal" class="budget-total">¥0.00</div>
+      </div>
+    </div>
+    <div class="panel-budget-actions">
+      <button class="btn primary" id="btnBudgetOk">确认预算</button>
+      <button class="btn" id="btnBudgetExport">导出预算配置</button>
+      <button class="btn" id="btnBudgetImport">导入预算配置</button>
+      <span class="tip" id="budgetHint" style="margin-top:0"></span>
+    </div>
+    <div class="tip">填各计划预算即可，总预算自动按各计划求和；修改后自动保存到本浏览器。点「导出预算配置」下载 budget.json，放到工作区后由 ingest.py 永久合并进数据（换设备/浏览器也不丢）。预算按月分别保存，切换月份互不干扰。</div>
+    <input type="file" id="budgetFile" accept=".json" style="display:none">
+    <!-- 预算执行：置于周期预算设置下方，关联更直观 -->
+    <div class="budget-exec">
+      <div class="budget-exec-title"><span class="dot" style="background:var(--green)"></span>预算执行</div>
+      <div id="budgetBox"></div>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpis" id="kpis"></div>
+
+  <!-- 消耗趋势（整行铺满） -->
+  <div class="panel">
+    <h3><span class="dot"></span>消耗趋势
+      <span class="seg" id="trendSeg" style="margin-left:auto">
+        <button data-m="cost" class="on">消耗</button>
+        <button data-m="imp">展现</button>
+        <button data-m="clk">点击</button>
+        <button data-m="lead">线索</button>
+        <button data-m="gmv">成交金额</button>
+      </span>
+    </h3>
+    <div id="trendChart" class="chart"></div>
+  </div>
+
+  <!-- Plan + Product charts -->
+  <div class="grid2b">
+    <div class="panel">
+      <h3><span class="dot" style="background:var(--blue)"></span>计划消耗对比
+        <span id="planHint" class="sel-hint" style="display:none"></span>
+        <span class="seg mini" id="planViewSeg" style="margin-left:auto">
+          <button data-v="amount" class="on">金额</button>
+          <button data-v="ratio">占比</button>
+        </span></h3>
+      <div id="planChart" class="chart" style="margin-top:6px"></div>
+      <div class="tip">切换「金额 / 占比」查看计划消耗结构；点击某计划条形或扇区可下钻筛选全局数据</div>
+    </div>
+    <div class="panel">
+      <h3><span class="dot" style="background:var(--orange)"></span>商品消耗 Top10</h3>
+      <div id="prodChart" class="chart" style="margin-top:6px"></div>
+      <div class="tip">单品明细来自大客方案；其他计划无单品时自动按「有消耗的计划」聚合展示</div>
+    </div>
+  </div>
+
+  <!-- Detail table -->
+  <div class="panel">
+    <h3><span class="dot" style="background:var(--purple)"></span>明细数据
+      <span class="seg" id="grainSeg">
+        <button data-g="总览">总览</button>
+        <button data-g="计划">按计划</button>
+        <button data-g="商品" class="on">按商品</button>
+      </span>
+      <span class="daily-date">
+        <label>按日期</label>
+        <select id="dailyDate"><option value="">全部</option></select>
+      </span>
+      <span class="export-bar">
+        <button class="btn" id="exAll">导出全部</button>
+        <button class="btn" id="exSum">导出汇总</button>
+        <button class="btn" id="exDaily">导出明细</button>
+        <button class="btn" id="exDailyCost">导出日消耗</button>
+        <button class="btn" id="exKpi">导出KPI</button>
+        <button class="btn" id="exAi">导出AI</button>
+      </span>
+    </h3>
+    <div id="detailWrap"></div>
+    <div class="tip" id="tblTip"></div>
+  </div>
+
+  <!-- AI -->
+  <div class="panel">
+    <div class="ai-head">
+      <span class="ai-icon">✦</span><strong>AI 分析结论</strong>
+      <span class="ai-sub" id="aiScope">基于当前筛选自动生成</span>
+    </div>
+    <div class="ai-cards" id="aiCards"></div>
+    <div class="ai-list" id="aiList"></div>
+    <div class="ai-sec-title">建议行动项 <span class="ai-sub" style="font-weight:500;margin-left:auto">按优先级排列 · 数据驱动</span></div>
+    <div class="ai-list" id="aiActions"></div>
+  </div>
+  <!-- 推广消耗分析 -->
+  <div class="panel" id="consumePanel">
+    <h3><span class="dot" style="background:var(--purple)"></span>推广消耗分析
+      <span class="seg" id="consumeSeg" style="margin-left:auto">
+        <button data-c="struct" class="on">日消耗结构</button>
+        <button data-c="plan">各计划消耗</button>
+        <button data-c="rank">商品消耗排行</button>
+        <button data-c="daily">日数据</button>
+        <button data-c="item">单品分析</button>
+      </span>
+    </h3>
+
+    <!-- Tab1 日消耗结构 -->
+    <div id="consStruct">
+      <div class="row" style="align-items:flex-end;gap:16px;margin-bottom:10px">
+        <div><label>选择日期</label><select id="consDay"></select></div>
+        <div class="tip" id="consStructHint"></div>
+      </div>
+      <div class="row" style="align-items:flex-start;gap:20px">
+        <div id="consStructChart" style="flex:0 0 280px"></div>
+        <div id="consStructTable" style="flex:1;min-width:260px"></div>
+      </div>
+    </div>
+
+    <!-- Tab2 各计划消耗 -->
+    <div id="consPlan" style="display:none">
+      <div class="tip" id="consPlanHint" style="margin-bottom:8px"></div>
+      <div id="consPlanChart" style="margin-bottom:10px"></div>
+      <div id="consPlanTable"></div>
+    </div>
+
+    <!-- Tab3 商品消耗排行 -->
+    <div id="consRank" style="display:none">
+      <div class="row" style="align-items:flex-end;gap:16px;margin-bottom:10px">
+        <div><label>选择计划</label><select id="consRankPlan"></select></div>
+        <div class="tip">按消耗降序展示 Top 15 商品（受全局日期筛选影响）</div>
+      </div>
+      <div id="consRankChart"></div>
+      <div id="consRankTable" style="margin-top:10px"></div>
+    </div>
+
+    <!-- Tab4 单品分析 -->
+    <div id="consItem" style="display:none">
+      <div class="row" style="align-items:flex-end;gap:16px;margin-bottom:10px">
+        <div><label>选择单品</label><select id="consItemSel"></select></div>
+        <div><label>计划筛选</label><select id="consItemPlan"><option value="">全部计划</option></select></div>
+        <div style="flex:1;min-width:220px"><label>搜索款号 / 关键词</label><input type="text" id="consItemSearch" placeholder="输入款号或商品名，如 3X4TX305 / 泳衣"></div>
+      </div>
+      <div id="consItemChart" style="margin-bottom:10px"></div>
+      <div id="consItemTable"></div>
+    </div>
+
+    <!-- Tab5 日数据（多指标组合图） -->
+    <div id="consDaily" style="display:none">
+      <div class="tip" style="margin-bottom:8px">按日聚合全部计划的推广指标（消耗为柱，PPC/点击率/ROI 为折线，双 Y 轴）</div>
+      <div id="consDailyChart"></div>
+    </div>
+  </div>
+  </div><!-- /marketingView -->
+
+  <!-- 目标达成视图 -->
+  <div id="targetView" style="display:none">
+    <div class="panel">
+      <h3><span class="dot" style="background:var(--red)"></span>月度目标达成 · 实际 vs 目标
+        <span class="sel-hint" id="targetHint" style="font-weight:600;color:var(--sub);margin-left:auto"></span>
+        <span class="export-bar"><button class="btn" id="exTarget">导出目标达成</button></span>
+      </h3>
+      <div class="tkpi-groups" id="targetKpis"></div>
+      <div class="risk-box">
+        <div class="risk-head">
+          <span class="risk-badge" id="riskBadge">—</span>
+          <strong style="font-size:14px">当前风险预警</strong>
+          <span class="tip" id="riskSub" style="margin:0"></span>
+        </div>
+        <div class="risk-list" id="riskList"></div>
+      </div>
+      <div class="sub-title">每日对照（目标 / 实际 / 完成率）<span class="cnt" id="targetCnt"></span></div>
+      <div class="dtable-wrap" style="max-height:420px"><div id="targetBody"></div></div>
+      <div class="tip">数据来源：月度目标日拆解表（含整店每日目标与实际）。推广费实际优先取看板 1688 消耗，与表中实际推广费互补；其余实际值来自经营表。</div>
+    </div>
+  </div>
+
+  <!-- 推广周报视图 -->
+  <div id="weeklyView" style="display:none">
+    <div class="panel">
+      <h3><span class="dot" style="background:var(--blue)"></span>推广周报
+        <span class="export-bar"><button class="btn" id="exWeekly">导出 CSV</button></span>
+      </h3>
+      <div class="tip" id="weeklyHint" style="margin-bottom:10px"></div>
+      <div class="sub-title s2">按周聚合 · 推广明细<span class="cnt">（缺数据列以「—」标记）</span></div>
+      <div class="dtable-wrap" style="max-height:460px"><div id="weeklyBody"></div></div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <h3><span class="dot" style="background:var(--blue)"></span>AI 结论 · 推广周报
+        <span class="tip" style="margin-left:auto;font-weight:600;color:var(--sub)">由聚合数据自动生成</span>
+      </h3>
+      <div id="weeklyAI" class="ai-list"></div>
+    </div>
+  </div>
+
+  <!-- 推广月报视图 -->
+  <div id="monthlyView" style="display:none">
+    <div class="panel">
+      <h3><span class="dot" style="background:var(--purple)"></span>推广月报
+        <span class="export-bar"><button class="btn" id="exMonthly">导出 CSV</button></span>
+      </h3>
+      <div class="tip" id="monthlyHint" style="margin-bottom:10px"></div>
+      <div class="sub-title">按月聚合 · 推广汇总<span class="cnt">（缺数据列以「—」标记）</span></div>
+      <div class="dtable-wrap" style="max-height:360px"><div id="monthlyBody"></div></div>
+      <div class="sub-title s2">按款号 × 月 明细</div>
+      <div class="dtable-wrap" style="max-height:420px"><div id="monthlySkuBody"></div></div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <h3><span class="dot" style="background:var(--purple)"></span>AI 结论 · 推广月报
+        <span class="tip" style="margin-left:auto;font-weight:600;color:var(--sub)">由聚合数据自动生成</span>
+      </h3>
+      <div id="monthlyAI" class="ai-list"></div>
+    </div>
+  </div>
+
+  <!-- 气温趋势视图 -->
+  <div id="weatherView" style="display:none">
+    <div class="panel">
+      <h3><span class="dot" style="background:var(--blue)"></span>气温趋势
+        <span class="tip" style="margin-left:auto;font-weight:600;color:var(--sub)">数据源：飞书·26年气温数据</span>
+      </h3>
+      <div class="filters">
+        <div><label>区域</label><select id="wxRegion"></select></div>
+        <div><label>城市</label><select id="wxCity"></select></div>
+        <div><label>年份</label><select id="wxYear"></select></div>
+        <div><label>月份</label><select id="wxMonth"></select></div>
+        <div><label>展示指标</label>
+          <select id="wxMetric">
+            <option value="temp">日平均气温</option>
+            <option value="tempHigh">日最高气温</option>
+            <option value="tempLow">日最低气温</option>
+          </select>
+        </div>
+      </div>
+      <div class="tip" id="wxHint" style="margin-bottom:10px"></div>
+      <div id="wxChart" class="chart"></div>
+      <div class="wx-ai-title" id="wxAlertTitle" style="display:none">🌡 气温骤变 AI 提醒（结合上新与推广）</div>
+      <div id="wxAlert"></div>
+      <div class="sub-title s2">逐日气温明细</div>
+      <div class="dtable-wrap" style="max-height:420px"><div id="wxBody"></div></div>
+    </div>
+  </div>
+
+  <!-- 聚水潭 × 生意参谋 经营洞察视图 -->
+  <div id="insightView" style="display:none">
+    <div class="panel">
+      <h3><span class="dot" style="background:#16a34a"></span>聚水潭 × 生意参谋 · 经营洞察
+        <span class="tip" style="margin-left:auto;font-weight:600;color:var(--sub)">数据源：飞书·聚水潭 / 生意参谋（日更新）</span>
+      </h3>
+      <div class="filters">
+        <div><label>年份</label><select id="insYear"></select></div>
+        <div><label>月份</label><select id="insMonth"></select></div>
+        <div><label>趋势指标</label>
+          <select id="insMetric">
+            <option value="jReal">聚水潭真实销售额</option>
+            <option value="refundRate">退款率</option>
+            <option value="gm">销售毛利率</option>
+            <option value="sVis">生意参谋访客数</option>
+            <option value="adCtr">广告点击率</option>
+            <option value="cartRate">加购率</option>
+            <option value="convRate">转化率</option>
+          </select>
+        </div>
+      </div>
+      <div class="tip" id="insHint" style="margin-bottom:10px"></div>
+
+      <div class="sub-title">聚水潭 · 销售实绩（所选区间汇总）</div>
+      <div class="kpis" id="insJstKpi"></div>
+
+      <div class="sub-title s2">生意参谋 · 流量转化（所选区间汇总）</div>
+      <div class="kpis" id="insSygcKpi"></div>
+
+      <div class="sub-title s2">趋势</div>
+      <div id="insChart" class="chart"></div>
+
+      <div class="sub-title s2">单品明细（聚水潭 × 生意参谋）</div>
+      <div class="dtable-wrap" style="max-height:480px"><div id="insSkuBody"></div></div>
+    </div>
+  </div>
+
+  <!-- Data management -->
+  <details class="panel">
+    <summary>数据管理（导入 CSV / 粘贴 / 导出 / 重置）</summary>
+    <div class="row" style="margin-top:12px;align-items:flex-start">
+      <div style="flex:1;min-width:220px">
+        <label>导入文件（CSV，列名自动识别）</label>
+        <input type="file" id="fileIn" accept=".csv,.xlsx" multiple>
+        <div class="tip">也可把后台导出的 xlsx 放到工作区 <code>导出/</code> 文件夹，运行 ingest.py 自动合并。</div>
+      </div>
+      <div style="flex:1.4;min-width:260px">
+        <label>或粘贴 CSV 文本</label>
+        <textarea id="pasteArea" placeholder="日期,计划名称,商品名称,展现量,点击量,消耗,点击率,成交金额,ROI ..."></textarea>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button class="btn primary" id="btnPaste">解析粘贴</button>
+          <button class="btn" id="btnExport">导出当前 CSV</button>
+          <button class="btn" id="btnReset">恢复示例</button>
+        </div>
+      </div>
+    </div>
+  </details>
+
+</div>
+
+<script src="data.js"></script>
+<script src="targets.js"></script>
+<script>
+/* ============ 数据模型 ============ */
+const SAMPLE = [
+  {date:"2026-08-06",dim:"总览",plan:"全部",pid:"",title:"",imp:31672,vexp:14694,clk:473,cost:417.85,ctr:0.0149,cpc:0.8834,favP:22,favS:15,cart:130,coupon:10,ord:13,ordAd:13,inq:5,lead:195,gmv:null,roi:null,leadCost:2.14,inqCost:83.57,leadCvr:0.4123,inqCvr:0.0106},
+  {date:"2026-08-06",dim:"计划",plan:"全站推店",pid:"",title:"",imp:12,vexp:12,clk:0,cost:0,cpc:null,favP:0,favS:0,cart:0,coupon:0,ord:0,ordAd:0,inq:0,lead:0,gmv:null,roi:null,leadCost:null,inqCost:null,leadCvr:0,inqCvr:0},
+  {date:"2026-08-06",dim:"计划",plan:"精准获客",pid:"",title:"",imp:0,vexp:0,clk:0,cost:0,cpc:null,favP:0,favS:0,cart:0,coupon:0,ord:0,ordAd:0,inq:0,lead:0,gmv:null,roi:null,leadCost:null,inqCost:null,leadCvr:0,inqCvr:0},
+  {date:"2026-08-06",dim:"计划",plan:"大客方案",pid:"",title:"",imp:31660,vexp:14682,clk:473,cost:417.85,cpc:0.8834,favP:22,favS:15,cart:130,coupon:10,ord:13,ordAd:13,inq:5,lead:195,gmv:null,roi:null,leadCost:2.14,inqCost:83.57,leadCvr:0.4123,inqCvr:0.0106},
+  {date:"2026-08-06",dim:"商品",plan:"大客方案",pid:"770764941054",sku:"3X4TX305",title:"【竹节棉】儿童T恤童贝童装2026夏季新款男女童卡通印花圆领短袖",imp:13141,vexp:5735,clk:197,cost:123.48,cpc:0.6268,favP:13,favS:12,cart:43,coupon:3,ord:4,ordAd:4,inq:2,lead:77,gmv:144.70,roi:1.1719,leadCost:1.60,inqCost:61.74,leadCvr:0.3909,inqCvr:0.0102},
+  {date:"2026-08-06",dim:"商品",plan:"大客方案",pid:"1046171504011",sku:"XX6SW371",title:"【赠泳帽】童贝童装2026夏季新款女童连体泳衣U型露背印花泳装",imp:2614,vexp:1187,clk:30,cost:49.86,cpc:1.662,favP:1,favS:0,cart:2,coupon:0,ord:1,ordAd:1,inq:0,lead:4,gmv:68.90,roi:1.3819,leadCost:12.47,inqCost:0,leadCvr:0.1333,inqCvr:0}
+];
+let DATA = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.length) ? window.DASHBOARD_DATA : SAMPLE;
+const fromFile = !!(window.DASHBOARD_DATA && window.DASHBOARD_DATA.length);
+/* 飞书日历表（日期→周次/气温/节气），由 sync_feishu.py 生成 */
+const CAL = window.DASHBOARD_CALENDAR || {};
+function calOf(d){ return CAL[d] || {}; }
+/* 聚水潭 / 生意参谋：由 sync_feishu.py 预聚合为「日级全店汇总」(周报月报用) + 「推广单品×月」(单品月表 enrich 用) */
+const JST_DAY = window.DASHBOARD_JST_DAY || {};
+const SYGC_DAY = window.DASHBOARD_SYGC_DAY || {};
+const JST_SKU = window.DASHBOARD_JST_SKU || {};   // {sku: {month: {...}}}
+const SYGC_SKU = window.DASHBOARD_SYGC_SKU || {};
+function calWeek(d){ const c=calOf(d); return c.week ? ("第"+c.week+"周") : ""; }
+let TARGET = (window.DASHBOARD_TARGET && window.DASHBOARD_TARGET.length) ? window.DASHBOARD_TARGET : [];
+let LOCAL = [];
+function allRows(){ return DATA.concat(LOCAL); }
+
+/* ============ 状态 ============ */
+const state = {
+  dateFrom:"", dateTo:"", planFilter:"", budgetYear:0, budgetMonth:0, planBudgets:{},
+  grain:"商品", trend:"cost", dailyDate:"", expanded:{}, view:"marketing", planView:"amount", consumeView:"struct",
+  sortKey2:{ overview:{key:"date",dir:1}, plan:{key:"cost",dir:-1}, prod:{key:"cost",dir:-1}, daily:{key:"date",dir:1} }
+};
+const pendingBudget = { planBudgets:{} };
+/* 筛选暂存：日期/计划变更先写入 pending，点击「筛选确认」后才落到 state 并渲染 */
+const pending = { dateFrom:"", dateTo:"", planFilter:"" };
+
+/* ============ 工具 ============ */
+const fmt = n=>{
+  if(n===null||n===undefined||n===""||isNaN(n)) return "—";
+  if(Math.abs(n)>=10000) return (n/10000).toFixed(2)+"万";
+  if(Number.isInteger(n)) return n.toLocaleString();
+  return n.toLocaleString(undefined,{maximumFractionDigits:2});
+};
+const pct = n=> (n===null||n===undefined||isNaN(n))?"—":(n*100).toFixed(2)+"%";
+const money = n=> (n===null||n===undefined||isNaN(n))?"—":"¥"+fmt(n);
+const sum = (arr,k)=> arr.reduce((s,r)=> s + (Number(r[k])||0), 0);
+const wCtr = arr=>{const i=sum(arr,"imp"),c=sum(arr,"clk");return i? c/i : null;};
+const wRoi = arr=>{const c=sum(arr,"cost"),g=sum(arr,"gmv");return (c&&g)? g/c : null;};
+
+/* ============ 筛选 ============ */
+function dimRows(dim){ return allRows().filter(r=>r.dim===dim); }
+function applyFilter(rows){
+  let x=rows;
+  if(state.dateFrom) x=x.filter(r=>r.date>=state.dateFrom);
+  if(state.dateTo)   x=x.filter(r=>r.date<=state.dateTo);
+  if(state.planFilter) x=x.filter(r=>r.plan===state.planFilter);
+  return x;
+}
+/* 仅按日期筛选（预算执行用，避免计划下钻把其他计划进度藏掉） */
+function dateFilter(rows){
+  let x=rows;
+  if(state.dateFrom) x=x.filter(r=>r.date>=state.dateFrom);
+  if(state.dateTo)   x=x.filter(r=>r.date<=state.dateTo);
+  return x;
+}
+/* 最新“有真实数据”的日期：取含 商品/计划 维度的日期最大值（排除未来空占位） */
+function realDataDates(){
+  return [...new Set(allRows().filter(r=>r.dim==="商品"||r.dim==="计划").map(r=>r.date).filter(Boolean))].sort();
+}
+function latestRealDate(){ const d=realDataDates(); return d.length?d[d.length-1]:null; }
+/* 置顶横幅：营销数据已更新至最近一个真实数据日期 */
+function updateDataAsOf(){
+  const el = document.getElementById('dataAsOfText');
+  if(!el) return;
+  if(!fromFile){
+    el.innerHTML = '当前为<b>示例数据</b>，无真实业务日期';
+    return;
+  }
+  const d = latestRealDate();
+  if(!d){ el.innerHTML = '暂无可用数据日期'; return; }
+  const dt = new Date(d + 'T00:00:00');
+  const wd = ['周日','周一','周二','周三','周四','周五','周六'][dt.getDay()];
+  const [y,m,day] = d.split('-');
+  el.innerHTML = '营销数据已更新至 <b>'+y+'年'+Number(m)+'月'+Number(day)+'日</b> <span class="da-sub">（'+wd+'）· 数据源：飞书多维表</span>';
+}
+/* 指定年月的起止日期 */
+function monthRangeOf(y,m){
+  const pad=n=>String(n).padStart(2,"0");
+  const first=new Date(y,m-1,1), last=new Date(y,m,0);
+  return [`${y}-${pad(first.getMonth()+1)}-${pad(first.getDate())}`, `${y}-${pad(last.getMonth()+1)}-${pad(last.getDate())}`];
+}
+function addDaysStr(s,n){ const [y,m,d]=s.split('-').map(Number); const dt=new Date(y,m-1,d); dt.setDate(dt.getDate()+n); const p=x=>String(x).padStart(2,"0"); return `${dt.getFullYear()}-${p(dt.getMonth()+1)}-${p(dt.getDate())}`; }
+/* 预算按整月统计（不受快捷日期筛选影响） */
+function budgetMonthRows(){
+  const [df,dt]=monthRangeOf(state.budgetYear,state.budgetMonth);
+  return dimRows("计划").filter(r=>r.date>=df && r.date<=dt);
+}
+
+/* ============ SVG 折线图 ============ */
+function lineChart(dates, values, opt){
+  opt=opt||{};
+  const W=760,H=250,P={l:56,r:18,t:18,b:32};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const max=Math.max(1,...values), min=0;
+  const n=dates.length;
+  const x=i=> n<=1? P.l+iw/2 : P.l + iw*i/(n-1);
+  const y=v=> P.t + ih - (v-min)/(max-min)*ih;
+  let g='';
+  for(let k=0;k<=4;k++){const v=min+(max-min)*k/4;const yy=y(v);
+    g+=`<line x1="${P.l}" y1="${yy}" x2="${W-P.r}" y2="${yy}" stroke="#eef1f6"/>`;
+    g+=`<text x="${P.l-6}" y="${yy+4}" text-anchor="end" fill="#7b8798" font-size="11">${opt.yfmt?opt.yfmt(v):fmt(v)}</text>`;}
+  dates.forEach((d,i)=>{ if(n>8 && i%Math.ceil(n/8)!==0 && i!==n-1) return;
+    g+=`<text x="${x(i)}" y="${H-10}" text-anchor="middle" fill="#7b8798" font-size="11">${d.slice(5)}</text>`;});
+  let path='';values.forEach((v,i)=>{path+=(i?'L':'M')+x(i)+' '+y(v)+' ';});
+  g+=`<path d="${path}" fill="none" stroke="${opt.color||'#ff6a00'}" stroke-width="2.6" stroke-linejoin="round"/>`;
+  values.forEach((v,i)=>{const cx=x(i),cy=y(v);
+    g+=`<circle class="pt" data-date="${dates[i]}" cx="${cx}" cy="${cy}" r="3.6" fill="${opt.color||'#ff6a00'}"/>`;
+    g+=`<circle class="pt" data-date="${dates[i]}" cx="${cx}" cy="${cy}" r="11" fill="transparent"/>`;
+    g+=`<text x="${cx}" y="${cy-9}" text-anchor="middle" fill="#1d2533" font-size="11" font-weight="600">${opt.yfmt?opt.yfmt(v):fmt(v)}</text>`;});
+  if(n===1) g+=`<text x="${x(0)}" y="${P.t+ih/2}" text-anchor="middle" fill="#7b8798" font-size="12">仅 1 天数据，导入更多日期后趋势更完整</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">${g}</svg>`;
+}
+
+/* 多序列折线图（气温趋势用：平均/最高/最低） */
+function wxLineChart(dates, series){
+  const W=820,H=300,P={l:54,r:20,t:20,b:34};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  let max=-Infinity, min=Infinity;
+  series.forEach(s=>s.values.forEach(v=>{ if(v!=null && !isNaN(v)){ if(v>max)max=v; if(v<min)min=v; } }));
+  if(!isFinite(max)){ max=1; min=0; }
+  if(min===max){ max=min+1; }
+  const pad=(max-min)*0.12; max+=pad; min-=pad;
+  const n=dates.length;
+  const x=i=> n<=1? P.l+iw/2 : P.l + iw*i/(n-1);
+  const y=v=> P.t + ih - (v-min)/(max-min)*ih;
+  let g='';
+  for(let k=0;k<=4;k++){ const v=min+(max-min)*k/4; const yy=y(v);
+    g+=`<line x1="${P.l}" y1="${yy}" x2="${W-P.r}" y2="${yy}" stroke="#eef1f6"/>`;
+    g+=`<text x="${P.l-6}" y="${yy+4}" text-anchor="end" fill="#7b8798" font-size="11">${v.toFixed(1)}℃</text>`; }
+  dates.forEach((d,i)=>{ if(n>10 && i%Math.ceil(n/10)!==0 && i!==n-1) return;
+    g+=`<text x="${x(i)}" y="${H-10}" text-anchor="middle" fill="#7b8798" font-size="10">${d.slice(5)}</text>`; });
+  series.forEach(s=>{
+    const path=s.values.map((v,i)=> v==null?'':(i?'L':'M')+x(i)+' '+y(v)+' ').join('');
+    g+=`<path d="${path}" fill="none" stroke="${s.color}" stroke-width="${s.thin?1.6:2.8}" stroke-linejoin="round" opacity="${s.thin?0.55:1}"/>`;
+    s.values.forEach((v,i)=>{ if(v==null) return; g+=`<circle cx="${x(i)}" cy="${y(v)}" r="${s.thin?2:3}" fill="${s.color}"/>`; });
+  });
+  let lx=P.l;
+  series.forEach(s=>{ g+=`<rect x="${lx}" y="${P.t-2}" width="12" height="12" rx="3" fill="${s.color}" opacity="${s.thin?0.6:1}"/>`;
+    g+=`<text x="${lx+16}" y="${P.t+8}" fill="#1d2533" font-size="11" font-weight="600">${s.name}</text>`; lx+=16+s.name.length*13+18; });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">${g}</svg>`;
+}
+
+/* ============ SVG 竖向条形（排名/Top，圆角+柱顶标签+渐变） ============ */
+function vBar(items, opt){
+  opt=opt||{};
+  const W=760,H=300,P={l:52,r:16,t:26,b:66};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const max=Math.max(1,...items.map(d=>d.value||0));
+  const n=items.length;
+  const step=n>0? iw/n : iw;
+  const bw=Math.min(56, step*0.62);
+  const y=v=> P.t+ih-(v/max)*ih;
+  const gid='vg'+Math.random().toString(36).slice(2,8);
+  let g=`<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b8bff"/><stop offset="1" stop-color="#2f6bff"/></linearGradient></defs>`;
+  for(let k=0;k<=4;k++){const v=max*k/4;const yy=y(v);
+    g+=`<line x1="${P.l}" y1="${yy}" x2="${W-P.r}" y2="${yy}" stroke="#eef1f6"/>`;
+    g+=`<text x="${P.l-6}" y="${yy+4}" text-anchor="end" fill="#7b8798" font-size="11">${opt.yfmt?opt.yfmt(v):fmt(v)}</text>`;}
+  items.forEach((d,i)=>{
+    const cx=P.l+step*(i+0.5);
+    const bh=((d.value||0)/max)*ih; const by=P.t+ih-bh;
+    const fill=d.color||`url(#${gid})`;
+    const sel=opt.selId && d.id===opt.selId;
+    g+=`<rect class="barclick" data-id="${d.id||''}" x="${cx-bw/2}" y="${by}" width="${bw}" height="${bh}" rx="6" fill="${fill}" opacity="${sel?1:0.92}"/>`;
+    g+=`<text x="${cx}" y="${by-6}" text-anchor="middle" fill="#1d2533" font-size="11" font-weight="700">${opt.yfmt?opt.yfmt(d.value):fmt(d.value)}</text>`;
+    g+=`<text x="${cx}" y="${H-46}" text-anchor="end" fill="#7b8798" font-size="11" transform="rotate(-38 ${cx} ${H-46})">${d.label||''}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">${g}</svg>`;
+}
+/* ============ SVG 竖向堆叠条形（按日 × 计划） ============ */
+function stackedVBar(dates, series, opt){
+  opt=opt||{};
+  const W=760,H=300,P={l:52,r:16,t:26,b:66};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const n=dates.length;
+  const step=n>0? iw/n : iw;
+  const bw=Math.min(38, step*0.6);
+  const totals=dates.map((d,i)=>series.reduce((s,se)=>s+(se.values[i]||0),0));
+  const max=Math.max(1,...totals);
+  const y=v=> P.t+ih-(v/max)*ih;
+  let g='';
+  for(let k=0;k<=4;k++){const v=max*k/4;const yy=y(v);
+    g+=`<line x1="${P.l}" y1="${yy}" x2="${W-P.r}" y2="${yy}" stroke="#eef1f6"/>`;
+    g+=`<text x="${P.l-6}" y="${yy+4}" text-anchor="end" fill="#7b8798" font-size="11">${opt.yfmt?opt.yfmt(v):fmt(v)}</text>`;}
+  dates.forEach((d,i)=>{
+    const cx=P.l+step*(i+0.5);
+    let acc=0;
+    series.forEach(se=>{ const v=se.values[i]||0; if(v<=0) return;
+      const bh=(v/max)*ih; const by=P.t+ih-acc-bh; acc+=bh;
+      g+=`<rect x="${cx-bw/2}" y="${by}" width="${bw}" height="${bh}" fill="${se.color}"/>`;
+    });
+    g+=`<text x="${cx}" y="${H-46}" text-anchor="end" fill="#7b8798" font-size="11" transform="rotate(-38 ${cx} ${H-46})">${d.slice(5)}</text>`;
+  });
+  const legend=series.map(se=>`<span class="dl-item"><span class="dl-dot" style="background:${se.color}"></span><span class="dl-label">${se.name}</span></span>`).join('');
+  return `<div><svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">${g}</svg><div class="donut-legend" style="flex-direction:row;flex-wrap:wrap;gap:14px;margin-top:6px">${legend}</div></div>`;
+}
+/* ============ SVG 组合图（柱 + 折线，双 Y 轴） ============ */
+function comboChart(cfg){
+  const {dates, bars=[], lines=[], opt={}} = cfg;
+  const W=820,H=320,P={l:58,r:58,t:30,b:66};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const n=dates.length;
+  const step=n>0? iw/n : iw;
+  const xc=i=> n<=1? P.l+iw/2 : P.l+step*i;
+  const leftMax=Math.max(1,...bars.flatMap(b=>b.values));
+  const rightVals=lines.filter(l=>l.axis==='right').flatMap(l=>l.values.filter(v=>v!=null));
+  const rightMax=Math.max(0.0001,...rightVals);
+  const yL=v=> P.t+ih-(v/leftMax)*ih;
+  const yR=v=> P.t+ih-(v/(rightMax||1))*ih;
+  let g='';
+  for(let k=0;k<=4;k++){
+    const v=leftMax*k/4, yy=yL(v);
+    g+=`<line x1="${P.l}" y1="${yy}" x2="${W-P.r}" y2="${yy}" stroke="#eef1f6"/>`;
+    g+=`<text x="${P.l-6}" y="${yy+4}" text-anchor="end" fill="#7b8798" font-size="11">${opt.yfmtLeft?opt.yfmtLeft(v):fmt(v)}</text>`;
+    const vr=rightMax*k/4, yy2=yR(vr);
+    g+=`<text x="${W-P.r+6}" y="${yy2+4}" text-anchor="start" fill="#7b8798" font-size="11">${opt.yfmtRight?opt.yfmtRight(vr):fmt(vr)}</text>`;
+  }
+  const s=bars.length||1;
+  const barW=Math.min(26, (step*0.46)/s);
+  const groupW=barW*s;
+  bars.forEach((b,k)=>{
+    b.values.forEach((v,i)=>{ if(v==null) return; const cx=xc(i); const bx=cx-groupW/2+k*barW; const bh=(v/leftMax)*ih; const by=P.t+ih-bh;
+      g+=`<rect class="barclick" data-date="${dates[i]}" x="${bx}" y="${by}" width="${barW}" height="${bh}" rx="3" fill="${b.color}" opacity="0.9"><title>${b.name} ${dates[i]}: ${opt.yfmtLeft?opt.yfmtLeft(v):fmt(v)}</title></rect>`;
+      g+=`<text x="${bx+barW/2}" y="${by-5}" text-anchor="middle" fill="#1d2533" font-size="10" font-weight="600">${opt.yfmtLeft?opt.yfmtLeft(v):fmt(v)}</text>`;
+    });
+  });
+  lines.forEach(l=>{
+    const yr=l.axis==='right'?yR:yL;
+    let path=''; l.values.forEach((v,i)=>{ if(v==null) return; path+=(path?'L':'M')+xc(i)+' '+yr(v)+' '; });
+    g+=`<path d="${path}" fill="none" stroke="${l.color}" stroke-width="2.4" stroke-linejoin="round"/>`;
+    l.values.forEach((v,i)=>{ if(v==null) return; g+=`<circle cx="${xc(i)}" cy="${yr(v)}" r="3" fill="${l.color}"/>`; });
+  });
+  dates.forEach((d,i)=>{ if(n>10 && i%Math.ceil(n/10)!==0 && i!==n-1) return;
+    g+=`<text x="${xc(i)}" y="${H-46}" text-anchor="end" fill="#7b8798" font-size="11" transform="rotate(-38 ${xc(i)} ${H-46})">${d.slice(5)}</text>`; });
+  const legend=[...bars.map(b=>`<span class="dl-item"><span class="dl-dot" style="background:${b.color}"></span><span class="dl-label">${b.name}</span></span>`),
+    ...lines.map(l=>`<span class="dl-item"><span class="dl-dot" style="background:${l.color};border-radius:50%"></span><span class="dl-label">${l.name}</span></span>`)].join('');
+  return `<div><svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">${g}</svg><div class="donut-legend" style="flex-direction:row;flex-wrap:wrap;gap:14px;margin-top:6px">${legend}</div></div>`;
+}
+/* ============ SVG 横向条形 ============ */
+function hBar(items, opt){
+  opt=opt||{};
+  const lf=opt.labelFont||13, vf=opt.valFont||12, rowH=opt.rowH||30;
+  const W=760, P={l:120,r:72,t:6,b:6};
+  const H=P.t+P.b+items.length*rowH;
+  const max=Math.max(1,...items.map(d=>d.value));
+  let g='';
+  items.forEach((d,i)=>{
+    const yy=P.t+i*rowH, bh=rowH-9, bw=max? d.value/max*(W-P.l-P.r):0;
+    const sel = opt.selId && d.id===opt.selId;
+    g+=`<text x="${P.l-8}" y="${yy+bh/2+4}" text-anchor="end" fill="${sel?'#ff6a00':'#1d2533'}" font-size="${lf}" font-weight="${sel?700:400}">${d.label}</text>`;
+    g+=`<rect class="barclick" data-id="${d.id||''}" x="${P.l}" y="${yy}" width="${bw}" height="${bh}" rx="5" fill="${sel?'#ff6a00':(d.color||'#ff9a3d')}"/>`;
+    g+=`<text x="${P.l+bw+7}" y="${yy+bh/2+4}" fill="#7b8798" font-size="${vf}">${opt.yfmt?opt.yfmt(d.value):fmt(d.value)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">${g}</svg>`;
+}
+
+/* ============ KPI（三行布局） ============ */
+function computeKPIs(){
+  const planR=applyFilter(dimRows("计划"));
+  const prodR=applyFilter(dimRows("商品"));
+  const cost=sum(planR,"cost"), imp=sum(planR,"imp"), clk=sum(planR,"clk");
+  const lead=sum(planR,"lead"), inq=sum(planR,"inq"), ord=sum(planR,"ord");
+  // 广告引导总成交金额 / 投产ROI：由商品层聚合到「总览/计划」层级读取（见 sync_feishu.py），
+  // 这样全计划与单计划下钻都能取到一致的成交与投产比。
+  const lvlR = state.planFilter ? planR.filter(r=>r.plan===state.planFilter) : applyFilter(dimRows("总览"));
+  const gmv=sum(lvlR,"gmv"), roi=wRoi(prodR);
+  const ctr=wCtr(planR);
+  const safe=(a,b)=> b>0? a/b : null;
+  const leadCvr=safe(lead,clk), inqCvr=safe(inq,clk), payCvr=safe(ord,clk);
+  const cpc=safe(cost,clk), leadCost=safe(cost,lead), inqCost=safe(cost,inq), ordCost=safe(cost,ord);
+  const scope = state.planFilter? "（"+state.planFilter+"）" : "（全计划）";
+  const row1=[
+    {t:"广告引导总成交金额",v:money(gmv),d:gmv>0?"广告引导成交":state.planFilter?(state.planFilter+"暂无成交"):"暂无成交",c:"k-green"},
+    {t:"总消耗",v:money(cost),d:"花费合计"+scope,c:""},
+    {t:"总展现",v:fmt(imp),d:"曝光量",c:""},
+    {t:"总点击",v:fmt(clk),d:"点击量",c:""},
+    {t:"总线索量",v:fmt(lead),d:"leads",c:"k-blue"},
+    {t:"总询盘量",v:fmt(inq),d:"inquiry",c:""},
+    {t:"总订单数",v:fmt(ord),d:"orders",c:""}
+  ];
+  const row2=[
+    {t:"点击率",v:pct(ctr),d:"点击/展现",c:"k-blue"},
+    {t:"线索转化率",v:pct(leadCvr),d:"线索/点击",c:"k-blue"},
+    {t:"询盘转化率",v:pct(inqCvr),d:"询盘/点击",c:"k-blue"},
+    {t:"支付转化率",v:pct(payCvr),d:"订单/点击",c:"k-green"},
+    {t:"投产ROI",v:roi===null?"—":roi.toFixed(2),d:roi===null?(state.planFilter?state.planFilter+"暂无成交":"暂无成交"):(roi>=1?"盈亏线上":"低于盈亏"),c:"k-green"}
+  ];
+  const row3=[
+    {t:"点击成本",v:money(cpc),d:"消耗/点击",c:"k-orange"},
+    {t:"线索成本",v:money(leadCost),d:"消耗/线索",c:"k-orange"},
+    {t:"询盘成本",v:money(inqCost),d:"消耗/询盘",c:"k-orange"},
+    {t:"订单成本",v:money(ordCost),d:"消耗/订单",c:"k-orange"}
+  ];
+  return {row1,row2,row3};
+}
+function renderKPIs(){
+  const {row1,row2,row3}=computeKPIs();
+  const rc=c=>`<div class="kpi"><div class="t">${c.t}</div><div class="v">${c.v}</div><div class="d">${c.d}</div></div>`;
+  document.getElementById("kpis").innerHTML =
+    `<div class="kpi-row-title scale">核心规模指标</div><div class="kpi-row scale">${row1.map(rc).join("")}</div>`+
+    `<div class="kpi-row-title conv">转化与投产</div><div class="kpi-row conv">${row2.map(rc).join("")}</div>`+
+    `<div class="kpi-row-title cost">单位成本</div><div class="kpi-row cost">${row3.map(rc).join("")}</div>`;
+}
+
+/* ============ 预算（设置 + 执行） ============ */
+/* 预算：按月保存（key=年-月），总预算 = 各计划求和（不单独输入） */
+function bmKey(y,m){ return y+"-"+String(m).padStart(2,"0"); }
+function getBudgets(){ try{ return JSON.parse(localStorage.getItem("dashBudgets")||"{}"); }catch(e){ return {}; } }
+function saveBudgets(){
+  const all=getBudgets();
+  all[bmKey(state.budgetYear,state.budgetMonth)]={plans:{...state.planBudgets}};
+  try{ localStorage.setItem("dashBudgets", JSON.stringify(all)); }catch(e){}
+}
+function loadBudget(){
+  // 优先级：localStorage(按月) > data.js(window.DASHBOARD_BUDGET 作为首月基线) > 默认空
+  const all=getBudgets();
+  const k=bmKey(state.budgetYear,state.budgetMonth);
+  if(all[k] && all[k].plans){ state.planBudgets=all[k].plans; return; }
+  try{
+    if(window.DASHBOARD_BUDGET && window.DASHBOARD_BUDGET.plans){
+      let pb=window.DASHBOARD_BUDGET.plans||{};
+      if(pb["解决方案"]!==undefined){ if(!pb["大客方案"]) pb["大客方案"]=pb["解决方案"]; delete pb["解决方案"]; }
+      state.planBudgets=pb; return;
+    }
+  }catch(e){}
+  state.planBudgets={};
+}
+function budgetTotal(){ return Object.values(state.planBudgets).reduce((s,v)=>s+(Number(v)||0),0); }
+function renderBudgetSettings(){
+  const plans=[...new Set(dimRows("计划").map(r=>r.plan))].filter(p=>p && p!=="全部").sort();
+  const box=document.getElementById("planBudgets");
+  if(!plans.length){ box.innerHTML='<span class="tip">暂无计划，导入数据后自动出现。</span>'; document.getElementById("budgetTotal").textContent=money(0); return; }
+  box.innerHTML = plans.map(p=>{
+    const v=state.planBudgets[p]||"";
+    return `<span class="pb-item"><label>${p}</label><input type="number" min="0" data-plan="${p}" value="${v}"></span>`;
+  }).join("");
+  box.querySelectorAll("input").forEach(inp=>inp.addEventListener("input",e=>{
+    const p=e.target.dataset.plan; state.planBudgets[p]=Number(e.target.value)||0;
+    saveBudgets();                       // 自动保存，刷新看板无需手动确认
+    document.getElementById("budgetTotal").textContent=money(budgetTotal());
+    renderBudget();
+  }));
+  document.getElementById("budgetTotal").textContent=money(budgetTotal());
+}
+function renderBudget(){
+  const rows=budgetMonthRows();
+  const totalCost=sum(rows,"cost");
+  const tb=budgetTotal();
+  let html="";
+  const curK=bmKey(state.budgetYear,state.budgetMonth);
+  if(tb>0){
+    const r=Math.min(totalCost/tb,1), over=totalCost>tb;
+    html+=`<div style="margin-bottom:12px"><div class="barwrap"><div class="barfill ${over?'over':''}" style="width:${(r*100).toFixed(1)}%"></div></div>`+
+      `<div class="progress-txt"><b>总预算（${curK}）</b> 已消耗 <b>${money(totalCost)}</b> / ${money(tb)}（<b>${(totalCost/tb*100).toFixed(1)}%</b>${over?'，<span class="up">⚠️ 超支 '+money(totalCost-tb)+'</span>':'，剩余 '+money(tb-totalCost)}）</div></div>`;
+  }
+  const plans=Object.keys(state.planBudgets).filter(p=>(state.planBudgets[p]||0)>0);
+  if(plans.length){
+    html+='<div class="kpi-row-title" style="margin-bottom:6px">各计划预算执行</div>';
+    plans.forEach(p=>{
+      const pc=sum(rows.filter(r=>r.plan===p),"cost");
+      const pb=state.planBudgets[p];
+      const r=Math.min(pc/pb,1), over=pc>pb;
+      html+=`<div style="margin:8px 0"><div class="barwrap" style="margin:4px 0"><div class="barfill ${over?'over':''}" style="width:${(r*100).toFixed(1)}%"></div></div>`+
+        `<div class="progress-txt">${p}：已消耗 <b>${money(pc)}</b> / ${money(pb)}（<b>${(pc/pb*100).toFixed(1)}%</b>${over?'，<span class="up">超支 '+money(pc-pb)+'</span>':'，剩余 '+money(pb-pc)}）</div></div>`;
+    });
+  }
+  /* —— 预算执行 AI：按当前日均消耗估算还能撑几天 —— */
+  if(tb>0){
+    const dataDates=[...new Set(rows.map(r=>r.date))].filter(Boolean).sort();
+    const latest=dataDates.length?dataDates[dataDates.length-1]:null;
+    const daysElapsed=dataDates.length;
+    if(latest && daysElapsed>0){
+      const avg=totalCost/daysElapsed;
+      const remain=tb-totalCost;
+      const lastDay=new Date(state.budgetYear,state.budgetMonth,0).getDate();
+      const ld=Number(latest.split('-')[2]);
+      const daysLeftMonth=lastDay-ld; // 本月剩余天数（不含 latest 当天）
+      if(remain<=0){
+        const overAmt=totalCost-tb;
+        html+=`<div class="budget-ai alert"><span class="bi-ic">⚠️</span><div>已<b>超支 ${money(overAmt)}</b>（消耗 ${money(totalCost)} / 预算 ${money(tb)}）。请追加预算或收缩低效计划/款号投放，避免后续断量。</div></div>`;
+      } else {
+        const canDays= avg>0 ? Math.floor(remain/avg) : Infinity;
+        const runout= isFinite(canDays)? addDaysStr(latest,canDays) : "—";
+        const monthEnd=addDaysStr(latest,daysLeftMonth);
+        if(canDays<daysLeftMonth){
+          const shortfall=Math.max(0, avg*daysLeftMonth - remain);
+          html+=`<div class="budget-ai alert"><span class="bi-ic">⚠️</span><div>`+
+            `<div class="big">预算告急：按当前日均消耗 ${money(avg)}/天，剩余 ${money(remain)} 仅可支撑约 ${canDays} 天</div>`+
+            `预计 <b>${runout}</b> 起预算耗尽，但本月还剩 <b>${daysLeftMonth}</b> 天（至 ${monthEnd}）。`+
+            `建议尽快<b>追加约 ${money(shortfall)}</b>（= 日均 ${money(avg)} × ${daysLeftMonth} 天 − 剩余 ${money(remain)}），以免下旬断量影响上新与推广节奏。</div></div>`;
+        } else {
+          html+=`<div class="budget-ai ok"><span class="bi-ic">✓</span><div>预算充足：剩余 ${money(remain)} 按日均 ${money(avg)}/天可支撑约 <b>${canDays}</b> 天，覆盖全月（剩 ${daysLeftMonth} 天）无压力。</div></div>`;
+        }
+      }
+    }
+  }
+  if(!html) html='<div class="muted">在上方「周期预算设置」中填写各计划预算后，显示执行进度。</div>';
+  document.getElementById("budgetBox").innerHTML=html;
+}
+
+/* ============ 趋势 ============ */
+function renderTrend(){
+  const metric=state.trend;
+  const planR=applyFilter(dimRows("计划"));
+  const prodR=applyFilter(dimRows("商品"));
+  const dates=[...new Set(planR.concat(prodR).map(r=>r.date))].sort();
+  const vals=dates.map(d=>{
+    if(metric==="gmv") return sum(prodR.filter(r=>r.date===d),"gmv");
+    if(metric==="lead") return sum(planR.filter(r=>r.date===d),"lead");
+    if(metric==="imp")  return sum(planR.filter(r=>r.date===d),"imp");
+    if(metric==="clk")  return sum(planR.filter(r=>r.date===d),"clk");
+    return sum(planR.filter(r=>r.date===d),"cost");
+  });
+  const isMoney=(metric==="gmv"||metric==="cost");
+  const barColor= metric==="gmv"?"#15a35a":metric==="lead"?"#2f6bff":metric==="imp"?"#7b8798":metric==="clk"?"#f59e0b":"#ff6a00";
+  const barName=({cost:"消耗",gmv:"成交金额",lead:"线索量",imp:"展现量",clk:"点击量"})[metric]||"指标";
+  const lineVals = (metric==="gmv"||metric==="cost")
+     ? dates.map(d=>{ const c=sum(planR.filter(r=>r.date===d),"cost"); const g=sum(prodR.filter(r=>r.date===d),"gmv"); return (c>0&&g)? g/c : null; })
+     : dates.map(d=>{ const c=sum(planR.filter(r=>r.date===d),"clk"); const im=sum(planR.filter(r=>r.date===d),"imp"); return (im>0)? c/im : null; });
+  const cfg={dates,
+    bars:[{name:barName,color:barColor,values:vals}],
+    lines:[{name:(metric==="gmv"||metric==="cost")?"ROI":"点击率",color:"#7c3aed",axis:"right",values:lineVals}],
+    opt:{yfmtLeft:isMoney?money:(v=>fmt(v)), yfmtRight:v=> (v==null?"—":(v*100).toFixed(1)+"%")}};
+  const tbox=document.getElementById("trendChart");
+  tbox.innerHTML = dates.length? comboChart(cfg) : '<div class="muted">无数据</div>';
+  tbox.querySelectorAll('.barclick').forEach(el=>el.onclick=()=>{ if(el.dataset.date) setSingleDate(el.dataset.date); });
+}
+
+/* ============ 计划消耗占比环形图（内联 SVG donut） ============ */
+function planDonut(items){
+  const total=items.reduce((s,d)=>s+d.value,0)||1;
+  const cx=120, cy=120, R=92, r=58;
+  let ang=-Math.PI/2, g='';
+  items.forEach(d=>{
+    const frac=d.value/total;
+    const a2=ang+frac*2*Math.PI;
+    const large=frac>0.5?1:0;
+    const x1=cx+R*Math.cos(ang), y1=cy+R*Math.sin(ang);
+    const x2=cx+R*Math.cos(a2), y2=cy+R*Math.sin(a2);
+    const x3=cx+r*Math.cos(a2), y3=cy+r*Math.sin(a2);
+    const x4=cx+r*Math.cos(ang), y4=cy+r*Math.sin(ang);
+    const path=`M${x1.toFixed(2)} ${y1.toFixed(2)} A${R} ${R} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L${x3.toFixed(2)} ${y3.toFixed(2)} A${r} ${r} 0 ${large} 0 ${x4.toFixed(2)} ${y4.toFixed(2)} Z`;
+    g+=`<path class="seg-pt" data-id="${d.id}" d="${path}" fill="${d.color}" stroke="#fff" stroke-width="2" style="cursor:pointer"><title>${d.label}：${money(d.value)} · ${(frac*100).toFixed(1)}%</title></path>`;
+    ang=a2;
+  });
+  g+=`<text x="${cx}" y="${cy-6}" text-anchor="middle" fill="#7b8798" font-size="12">总消耗</text>`;
+  g+=`<text x="${cx}" y="${cy+16}" text-anchor="middle" fill="#1d2533" font-size="18" font-weight="800">${money(total)}</text>`;
+  const svg=`<svg viewBox="0 0 240 240" width="100%" style="max-width:260px" preserveAspectRatio="xMidYMid meet">${g}</svg>`;
+  const legend='<div class="donut-legend">'+items.map(d=>{
+    const frac=d.value/total;
+    return `<div class="dl-item"><span class="dl-dot" style="background:${d.color}"></span><span class="dl-label">${d.label}</span><span class="dl-val">${money(d.value)} · ${(frac*100).toFixed(1)}%</span></div>`;
+  }).join('')+'</div>';
+  return `<div class="donut-wrap">${svg}${legend}</div>`;
+}
+
+/* ============ 计划对比（金额 / 占比 切换，可点击下钻） ============ */
+function renderPlanChart(){
+  const planR=applyFilter(dimRows("计划"));
+  const plans=[...new Set(planR.map(r=>r.plan))].filter(Boolean);
+  const items=plans.map(p=>{const rs=planR.filter(r=>r.plan===p);return {id:p,label:p,value:sum(rs,"cost")};})
+    .sort((a,b)=>b.value-a.value);
+  const box=document.getElementById("planChart");
+  if(!items.length){ box.innerHTML='<div class="muted">无数据</div>'; }
+  else if(state.planView==="ratio"){
+    const pal=["#2f6bff","#15a35a","#f59e0b","#7c3aed","#e23b3b","#0ea5e9","#db2777","#65a30d"];
+    items.forEach((d,i)=>d.color=pal[i%pal.length]);
+    box.innerHTML = planDonut(items);
+    box.querySelectorAll('.seg-pt').forEach(el=>el.onclick=()=>{
+      const id=el.dataset.id; state.planFilter=(state.planFilter===id)?"":id; pending.planFilter=state.planFilter; syncPlanFilterUI(); renderAll();
+    });
+  } else {
+    items.forEach((d)=>d.color="#2f6bff");
+    box.innerHTML = hBar(items,{yfmt:money,selId:state.planFilter||null,labelFont:14,valFont:13,rowH:34});
+    box.querySelectorAll('.barclick').forEach(el=>el.onclick=()=>{
+      const id=el.dataset.id; state.planFilter = (state.planFilter===id)?"":id; pending.planFilter=state.planFilter; syncPlanFilterUI(); renderAll();
+    });
+  }
+  const hint=document.getElementById("planHint");
+  if(state.planFilter){ hint.style.display="inline-block"; hint.textContent="已选："+state.planFilter; }
+  else hint.style.display="none";
+}
+
+/* ============ 商品 Top10 ============ */
+function renderProdChart(){
+  const el=document.getElementById("prodChart");
+  const prodR=applyFilter(dimRows("商品"));
+  if(prodR.length){
+    const byP=[...prodR].sort((a,b)=>b.cost-a.cost).slice(0,10)
+      .map(r=>({id:r.sku,label:r.sku||r.title||r.pid,value:r.cost}));
+    el.innerHTML = vBar(byP,{yfmt:money});
+    return;
+  }
+  // 当前筛选下无单品明细 → 按「有消耗的计划的消耗」聚合展示（跨计划，仅含实际有消耗的计划）
+  const planR=dateFilter(dimRows("计划"));
+  const byPlan={};
+  planR.forEach(r=>{ if(r.cost>0){ byPlan[r.plan]=(byPlan[r.plan]||0)+r.cost; } });
+  const items=Object.entries(byPlan).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  if(!items.length){ el.innerHTML='<div class="muted">该筛选范围内暂无消耗数据</div>'; return; }
+  const note = state.planFilter ? '当前计划无单品明细，按「区间内各计划消耗」聚合展示 Top10' : '当前筛选无单品明细，按「有消耗的计划」聚合展示消耗 Top10';
+  el.innerHTML = '<div class="muted" style="margin-bottom:6px">'+note+'</div>' +
+    vBar(items.map(([plan,value])=>({id:plan,label:plan,value})),{yfmt:money});
+}
+
+/* ============ 明细表 ============ */
+const COLS = {
+  "总览":[
+    {k:"date",t:"日期"},{k:"imp",t:"展现",f:fmt},{k:"clk",t:"点击",f:fmt},{k:"cost",t:"消耗",f:money},
+    {k:"ctr",t:"点击率",f:pct},{k:"cpc",t:"CPC",f:money},{k:"favP",t:"收藏商品",f:fmt},{k:"cart",t:"加购",f:fmt},
+    {k:"coupon",t:"领券",f:fmt},{k:"ord",t:"订单",f:fmt},{k:"inq",t:"询盘",f:fmt},{k:"lead",t:"线索",f:fmt}
+  ],
+  "计划":[
+    {k:"plan",t:"计划"},{k:"imp",t:"展现",f:fmt},{k:"clk",t:"点击",f:fmt},{k:"cost",t:"消耗",f:money},
+    {k:"ctr",t:"点击率",f:pct},{k:"cpc",t:"CPC",f:money},{k:"ord",t:"订单",f:fmt},{k:"inq",t:"询盘",f:fmt},
+    {k:"lead",t:"线索",f:fmt}
+  ],
+  "商品":[
+    {k:"img",t:"主图",img:true},{k:"sku",t:"款号"},{k:"title",t:"商品标题"},{k:"imp",t:"展现",f:fmt},{k:"clk",t:"点击",f:fmt},{k:"cost",t:"消耗",f:money},
+    {k:"ctr",t:"点击率",f:pct},{k:"cpc",t:"CPC",f:money},{k:"ord",t:"订单",f:fmt},{k:"inq",t:"询盘",f:fmt},
+    {k:"lead",t:"线索",f:fmt},{k:"gmv",t:"成交金额",f:money},{k:"roi",t:"ROI",f:v=>v==null?"—":v.toFixed(2),roi:true}
+  ]
+};
+const COLS_DAILY = {
+  "总览": COLS["总览"],
+  "计划":[{k:"date",t:"日期"},{k:"plan",t:"计划"},{k:"imp",t:"展现",f:fmt},{k:"clk",t:"点击",f:fmt},{k:"cost",t:"消耗",f:money},
+    {k:"ctr",t:"点击率",f:pct},{k:"cpc",t:"CPC",f:money},{k:"ord",t:"订单",f:fmt},{k:"inq",t:"询盘",f:fmt},{k:"lead",t:"线索",f:fmt}],
+  "商品":[{k:"date",t:"日期"},{k:"img",t:"主图",img:true},{k:"sku",t:"款号"},{k:"title",t:"商品标题"},{k:"imp",t:"展现",f:fmt},{k:"clk",t:"点击",f:fmt},{k:"cost",t:"消耗",f:money},
+    {k:"ctr",t:"点击率",f:pct},{k:"cpc",t:"CPC",f:money},{k:"ord",t:"订单",f:fmt},{k:"inq",t:"询盘",f:fmt},
+    {k:"lead",t:"线索",f:fmt},{k:"gmv",t:"成交金额",f:money},{k:"roi",t:"ROI",f:v=>v==null?"—":v.toFixed(2),roi:true}]
+};
+/* 分组汇总表的可排序指标 */
+const SORT_OPTS = {
+  "商品":[
+    {k:"cost",t:"消耗"},{k:"roi",t:"投产ROI"},{k:"gmv",t:"成交金额"},{k:"clk",t:"点击"},
+    {k:"imp",t:"展现"},{k:"lead",t:"线索"},{k:"inq",t:"询盘"},{k:"ord",t:"订单"}
+  ],
+  "计划":[
+    {k:"cost",t:"消耗"},{k:"clk",t:"点击"},{k:"imp",t:"展现"},{k:"lead",t:"线索"},{k:"inq",t:"询盘"},{k:"ord",t:"订单"}
+  ]
+};
+function roiTag(v){
+  if(v==null||isNaN(v)) return "—";
+  if(v>=2) return `<span class="tag g">${v.toFixed(2)}</span>`;
+  if(v>=1) return `<span class="tag m">${v.toFixed(2)}</span>`;
+  return `<span class="tag r">${v.toFixed(2)}</span>`;
+}
+function cellHTML(r,c){
+  const v=r[c.k];
+  if(c.img) return r.img? `<td><img class="thumb" src="${r.img}" loading="lazy" onerror="this.style.display='none'"></td>` : `<td>—</td>`;
+  if(c.roi) return `<td>${roiTag(v)}</td>`;
+  if(c.k==="title") return `<td class="title-cell">${v==null||v===""?"—":v}</td>`;
+  if(v==null||v==="") return `<td>—</td>`;
+  return `<td>${c.f?c.f(v):v}</td>`;
+}
+/* 周期内聚合：按 keyFn 分组，累加原始量，重算比率指标 */
+function aggregate(rows, keyFn, dim){
+  const m=new Map();
+  rows.forEach(r=>{
+    const k=keyFn(r);
+    if(!m.has(k)) m.set(k,{_key:k,dim:dim,plan:"",pid:"",sku:"",title:"",img:"",
+      imp:0,vexp:0,clk:0,cost:0,favP:0,favS:0,cart:0,coupon:0,ord:0,inq:0,lead:0,gmv:0});
+    const o=m.get(k);
+    ["imp","vexp","clk","cost","favP","favS","cart","coupon","ord","inq","lead","gmv"].forEach(f=> o[f]+= Number(r[f])||0);
+    o.plan=o.plan||r.plan||""; o.pid=o.pid||r.pid||""; o.sku=o.sku||r.sku||"";
+    o.title=o.title||r.title||""; o.img=o.img||r.img||"";
+  });
+  return [...m.values()].map(o=>{
+    o.ctr = o.imp? o.clk/o.imp : null;
+    o.cpc = o.clk? o.cost/o.clk : null;
+    o.roi = (o.cost&&o.gmv)? o.gmv/o.cost : null;
+    o.leadCost = o.lead? o.cost/o.lead : null;
+    o.inqCost = o.inq? o.cost/o.inq : null;
+    o.leadCvr = o.clk? o.lead/o.clk : null;
+    o.inqCvr = o.clk? o.inq/o.clk : null;
+    return o;
+  }).sort((a,b)=> b.cost-a.cost);
+}
+function renderTableInto(el, rows, cols, which){
+  if(!rows.length){ el.innerHTML='<div class="muted">无数据</div>'; return; }
+  const k=state.sortKey2[which].key, dir=state.sortKey2[which].dir;
+  const sorted=[...rows].sort((a,b)=>{
+    let x=a[k], y=b[k];
+    if(x==null) x=""; if(y==null) y="";
+    if(typeof x==="string"||typeof y==="string") return dir*String(x).localeCompare(String(y),"zh");
+    return dir*((Number(x)||0)-(Number(y)||0));
+  });
+  el.innerHTML=`<div class="dtable-wrap"><table class="dtable"><thead><tr>${
+    cols.map(c=>`<th data-k="${c.k}">${c.t}</th>`).join("")
+  }</tr></thead><tbody>${
+    sorted.map(r=>"<tr>"+cols.map(c=>cellHTML(r,c)).join("")+"</tr>").join("")
+  }</tbody></table></div>`;
+  el.querySelectorAll("th").forEach(th=>th.onclick=()=>{
+    const k2=th.dataset.k;
+    if(state.sortKey2[which].key===k2) state.sortKey2[which].dir*=-1;
+    else state.sortKey2[which]={key:k2,dir:-1};
+    renderTable();
+  });
+}
+function renderTable(){
+  const wrap=document.getElementById("detailWrap");
+  const g=state.grain;
+  const dd=state.dailyDate;
+  if(g==="总览"){
+    let rows=applyFilter(dimRows("总览"));
+    if(dd) rows=rows.filter(r=>r.date===dd);
+    wrap.innerHTML=`<div class="sub-title">每日数据 <span class="cnt">${rows.length} 条${dd?" · 仅 "+dd:""}</span></div><div id="ovBody"></div>`;
+    renderTableInto(document.getElementById("ovBody"), rows, COLS["总览"], "overview");
+    document.getElementById("tblTip").textContent="";
+    refreshDailyDate();
+    return;
+  }
+  const rows=applyFilter(dimRows(g));
+  const keyFn = g==="商品" ? (r=> r.sku||r.pid||r.title||"未命名") : (r=> r.plan);
+  const sumRows=aggregate(rows, keyFn, g);
+  const cols=COLS_DAILY[g];
+  const which = g==="商品" ? "prod":"plan";
+  const k=state.sortKey2[which].key, dir=state.sortKey2[which].dir;
+  const sortedSum=[...sumRows].sort((a,b)=>{
+    let x=a[k], y=b[k];
+    if(x==null) x=""; if(y==null) y="";
+    if(typeof x==="string"||typeof y==="string") return dir*String(x).localeCompare(String(y),"zh");
+    return dir*((Number(x)||0)-(Number(y)||0));
+  });
+  const dailyMap=new Map();
+  rows.forEach(r=>{ const kk=keyFn(r); if(!dailyMap.has(kk)) dailyMap.set(kk,[]); dailyMap.get(kk).push(r); });
+  dailyMap.forEach(arr=>arr.sort((a,b)=> a.date<b.date?-1:1));
+  const allKeys=sortedSum.map(o=>o._key);
+  const expSet = dd ? new Set(allKeys) : (state.expanded||{});
+  const label = g==="商品" ? "按款号分组" : "按计划分组";
+  const allOpen = allKeys.length>0 && allKeys.every(k=>(state.expanded||{})[k]);
+  const sortBtns = SORT_OPTS[g].map(o=>{
+    const on=state.sortKey2[which].key===o.k;
+    const ar= on ? (state.sortKey2[which].dir<0?" ↓":" ↑") : "";
+    return `<button data-sort="${o.k}" class="${on?'on':''}">${o.t}${ar}</button>`;
+  }).join("");
+  let html=`<div class="sub-title">${label} <span class="cnt">${sortedSum.length} 组${dd?" · 仅 "+dd:""}</span>`+
+           `<span class="tip" style="margin:0 0 0 8px">点击款号/计划行首箭头展开每日明细，或点「展开全部」平铺查看</span>`+
+           `<span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">`+
+           `<button class="btn mini" data-toggle="expand">${dd?"—":(allOpen?"收起全部":"展开全部")}</button>`+
+           `<span class="tip" style="margin:0">排序</span>`+
+           `<span class="seg mini">${sortBtns}</span></span></div>`;
+  html+=`<div class="dtable-wrap"><table class="dtable"><thead><tr><th class="grp-col"></th>`+
+        cols.map(c=>`<th data-k="${c.k}">${c.t}</th>`).join("")+`</tr></thead><tbody>`;
+  sortedSum.forEach(o=>{
+    const open = dd ? true : !!expSet[o._key];
+    html+=`<tr class="grp-row" data-key="${encodeURIComponent(o._key)}"><td class="grp-col"><span class="tw">${open?'▾':'▸'}</span></td>`;
+    html+=cols.map(c=> c.k==="date" ? `<td>汇总</td>` : cellHTML(o,c)).join("");
+    html+=`</tr>`;
+    if(open){
+      const dr = dd ? (dailyMap.get(o._key)||[]).filter(r=>r.date===dd) : (dailyMap.get(o._key)||[]);
+      dr.forEach(r=>{
+        html+=`<tr class="sub-row" data-key="${encodeURIComponent(o._key)}"><td class="grp-col"></td>`;
+        html+=cols.map(c=> cellHTML(r,c)).join("");
+        html+=`</tr>`;
+      });
+    }
+  });
+  html+=`</tbody></table></div>`;
+  wrap.innerHTML=html;
+  wrap.querySelectorAll(".grp-row").forEach(tr=>tr.onclick=()=>{
+    if(dd) return;
+    const key=decodeURIComponent(tr.dataset.key);
+    state.expanded=state.expanded||{};
+    state.expanded[key]=!state.expanded[key];
+    renderTable();
+  });
+  wrap.querySelectorAll("thead th").forEach(th=>{ if(th.classList.contains("grp-col")) return;
+    th.onclick=()=>{
+      const k2=th.dataset.k;
+      if(state.sortKey2[which].key===k2) state.sortKey2[which].dir*=-1;
+      else state.sortKey2[which]={key:k2,dir:-1};
+      renderTable();
+    };
+  });
+  wrap.querySelectorAll(".seg.mini button").forEach(btn=>btn.onclick=()=>{
+    const k2=btn.dataset.sort;
+    if(state.sortKey2[which].key===k2) state.sortKey2[which].dir*=-1;
+    else state.sortKey2[which]={key:k2,dir:-1};
+    renderTable();
+  });
+  wrap.querySelectorAll("button[data-toggle='expand']").forEach(b=>b.onclick=()=>{
+    if(dd) return;
+    const ao = allKeys.length>0 && allKeys.every(k=>(state.expanded||{})[k]);
+    state.expanded = state.expanded||{};
+    if(ao){ state.expanded={}; } else { allKeys.forEach(k=>state.expanded[k]=true); }
+    renderTable();
+  });
+  document.getElementById("tblTip").textContent = g==="商品"
+    ? "（ROI≥2绿 / 1–2橙 / <1红；汇总行为周期内合计，点击款号行首箭头展开每日明细；可用上方「按日期」筛选单日）"
+    : "（汇总行为周期内合计，点击计划行首箭头展开每日明细；可用上方「按日期」筛选单日）";
+  refreshDailyDate();
+}
+function refreshDailyDate(){
+  const sel=document.getElementById("dailyDate");
+  if(!sel) return;
+  const dates=[...new Set(applyFilter(allRows()).map(r=>r.date))].filter(Boolean).sort().reverse();
+  const cur=state.dailyDate;
+  sel.innerHTML='<option value="">全部</option>'+dates.map(d=>`<option value="${d}">${d}</option>`).join("");
+  if(dates.includes(cur)) sel.value=cur; else { sel.value=""; state.dailyDate=""; }
+}
+
+/* ============ AI 分析结论 ============ */
+let _lastAI=[], _lastActions=[];
+function renderAI(){
+  const dtFrom=state.dateFrom, dtTo=state.dateTo;
+  let p = applyFilter(dimRows("商品"));
+  const scopeTxt = (dtFrom||dtTo)
+    ? `筛选：${dtFrom||"起"} ~ ${dtTo||"今"}${state.planFilter?" · "+state.planFilter:""}`
+    : `全部日期${state.planFilter?" · "+state.planFilter:""}`;
+  document.getElementById("aiScope").textContent = scopeTxt + `（${p.length} 条商品记录）`;
+
+  const m={};
+  p.forEach(r=>{
+    const key=(r.sku||r.pid||r.title||"未知款");
+    if(!m[key]) m[key]={sku:r.sku,pid:r.pid,title:r.title,cost:0,imp:0,clk:0,vexp:0,lead:0,inq:0,ord:0,gmv:0,favP:0,cart:0};
+    const o=m[key];
+    o.cost+=Number(r.cost)||0; o.imp+=Number(r.imp)||0; o.clk+=Number(r.clk)||0; o.vexp+=Number(r.vexp)||0;
+    o.lead+=Number(r.lead)||0; o.inq+=Number(r.inq)||0; o.ord+=Number(r.ord)||0; o.gmv+=Number(r.gmv)||0;
+    o.favP+=Number(r.favP)||0; o.cart+=Number(r.cart)||0;
+  });
+  const arr=Object.values(m);
+  if(arr.length===0){
+    document.getElementById("aiCards").innerHTML="";
+    document.getElementById("aiList").innerHTML='<div class="ai-item info"><span class="ic">ℹ</span><div class="tx">当前筛选范围内没有「商品」维度数据，无法生成商品级分析。请确认已导入 SKA驾驶舱(推广商品) 报表，或放宽计划筛选。</div></div>';
+    document.getElementById("aiActions").innerHTML="";
+    _lastAI=[]; _lastActions=[];
+    return;
+  }
+  arr.forEach(o=>{ o.roi = o.cost? o.gmv/o.cost : null; });
+  const totCost=arr.reduce((s,x)=>s+x.cost,0);
+  const totGmv=arr.reduce((s,x)=>s+x.gmv,0);
+  const totLead=arr.reduce((s,x)=>s+x.lead,0);
+  const totInq=arr.reduce((s,x)=>s+x.inq,0);
+  const totOrd=arr.reduce((s,x)=>s+x.ord,0);
+  const totImp=arr.reduce((s,x)=>s+x.imp,0);
+  const totClk=arr.reduce((s,x)=>s+x.clk,0);
+  const roi = totCost? totGmv/totCost : null;
+  const ctr = totImp? totClk/totImp : null;
+  const leadCost = totLead? totCost/totLead : null;
+  const ordCost = totOrd? totCost/totOrd : null;
+
+  const cards=[];
+  if(roi!==null) cards.push({t:"综合ROI",v:roi.toFixed(2),
+    d:roi>=2?'<span class="down">优秀</span>':(roi>=1?'<span class="down">盈亏线上</span>':'<span class="up">低于盈亏</span>')});
+  if(ctr!==null) cards.push({t:"平均点击率",v:pct(ctr),d:ctr>=0.02?'<span class="down">优于行业</span>':'<span class="up">偏低</span>'});
+  if(leadCost!==null) cards.push({t:"线索成本",v:money(leadCost),d:leadCost>5?'<span class="up">偏高</span>':'<span class="down">健康</span>'});
+  cards.push({t:"成交金额",v:money(totGmv),d:`覆盖消耗 ${roi!==null?(roi*100).toFixed(0)+'%':'—'}`});
+  const healthy=arr.filter(x=>x.roi!==null&&x.roi>=1).length;
+  cards.push({t:"健康款占比",v:(arr.length?healthy/arr.length*100:0).toFixed(0)+"%",d:`${healthy}/${arr.length} 款 ROI≥1`});
+  if(state.budget>0){
+    const r=totCost/state.budget*100;
+    cards.push({t:"预算执行率",v:r.toFixed(0)+"%",d:totCost>state.budget?'<span class="up">已超支</span>':'<span class="down">预算内</span>'});
+  }
+  document.getElementById("aiCards").innerHTML = cards.map(c=>
+    `<div class="ai-card"><div class="t">${c.t}</div><div class="v">${c.v}</div><div class="d">${c.d}</div></div>`).join("");
+
+  const out=[];
+  const roiCls = r=> r===null?"":(r>=2?"grn":(r>=1?"":'red'));
+  const overallCls = roi===null?"info":(roi>=1?"good":"bad");
+  let overallTxt = `筛选范围内，<b>大客方案</b>推广商品共 <b>${arr.length}</b> 款，累计消耗 <span class="hi">${money(totCost)}</span>`;
+  if(totGmv>0) overallTxt += `，成交金额 <span class="hi">${money(totGmv)}</span>，综合 ROI <b class="${roiCls(roi)}">${roi.toFixed(2)}</b>`;
+  if(roi!==null){
+    if(roi>=1) overallTxt += `，当前<span class="grn">盈亏平衡线之上</span>。`;
+    else overallTxt += `，<span class="red">低于盈亏平衡线</span>，需重点优化高消耗低产出款号。`;
+  }
+  out.push({cls:overallCls,ic:"◆",html:overallTxt});
+
+  const hi=arr.filter(x=>x.roi!==null&&x.roi>=2).length;
+  const mid=arr.filter(x=>x.roi!==null&&x.roi>=1&&x.roi<2).length;
+  const lo=arr.filter(x=>x.roi!==null&&x.roi<1).length;
+  out.push({cls:"info",ic:"▤",html:`<b>ROI 分布</b>：优秀(≥2) <span class="grn">${hi}</span> 款 / 达标(1–2) <b>${mid}</b> 款 / 亏损(<1) <span class="red">${lo}</span> 款，合计 ${arr.length} 款。`});
+
+  if(totImp>0){
+    const c2l = totClk? totLead/totClk : null;
+    const l2i = totLead? totInq/totLead : null;
+    const i2o = totInq? totOrd/totInq : null;
+    out.push({cls:"info",ic:"⇲",html:
+      `<b>转化漏斗</b>：展现 ${fmt(totImp)} → 点击 ${fmt(totClk)}（CTR ${pct(ctr)}）→ 线索 ${fmt(totLead)}`+
+      (c2l!==null?`（${pct(c2l)}）`:"")+` → 询盘 ${fmt(totInq)}`+(l2i!==null?`（${pct(l2i)}）`:"")+
+      ` → 订单 ${fmt(totOrd)}`+(i2o!==null?`（${pct(i2o)}）`:"")+`。`});
+  }
+
+  const dates=[...new Set(p.map(r=>r.date))].sort();
+  if(dates.length>=2){
+    const dA=dates[dates.length-2], dB=dates[dates.length-1];
+    const fA=p.filter(r=>r.date===dA), fB=p.filter(r=>r.date===dB);
+    const cA=sum(fA,"cost"), cB=sum(fB,"cost"), gA=sum(fA,"gmv"), gB=sum(fB,"gmv");
+    const dCost=cB-cA, dCostPct=cA?(dCost/cA*100):0;
+    const dGmv=gB-gA, dGmvPct=gA?(dGmv/gA*100):0;
+    const arrowC = dCost>=0?'<span class="up">↑</span>':'<span class="down">↓</span>';
+    const arrowG = dGmv>=0?'<span class="up">↑</span>':'<span class="down">↓</span>';
+    out.push({cls:"info",ic:"↻",html:
+      `日环比（${dB} vs ${dA}）：消耗 ${arrowC} <b>${money(cB)}</b>（${dCostPct>=0?'+':''}${dCostPct.toFixed(1)}%），`+
+      `成交 ${arrowG} <b>${money(gB)}</b>（${dGmvPct>=0?'+':''}${dGmvPct.toFixed(1)}%）。`});
+  }
+
+  const zero = arr.filter(x=>x.cost>0 && (x.gmv===0||x.gmv===null)).sort((a,b)=>b.cost-a.cost);
+  if(zero.length){
+    const items=zero.slice(0,3).map(x=>`<b>${x.sku||x.pid}</b>（消耗 ${money(x.cost)}）`).join("、");
+    out.push({cls:"bad",ic:"✕",html:`<b>高消耗零成交</b>：${zero.length} 款有花费但无成交（如 ${items}）。建议排查库存/价格/落地页。`});
+  }
+
+  const good=arr.filter(x=>x.roi!==null&&x.roi>=2).sort((a,b)=>b.roi-a.roi).slice(0,3);
+  if(good.length){
+    const items=good.map(x=>`<b>${x.sku||x.pid}</b>（ROI <span class="grn">${x.roi.toFixed(2)}</span>，成交 ${money(x.gmv)}）`).join("、");
+    out.push({cls:"good",ic:"★",html:`<b>高效款号</b>（ROI≥2）：${items}。建议保持并加预算放大。`});
+  }
+
+  const avgCost=totCost/arr.length;
+  const bad=arr.filter(x=>x.roi!==null&&x.roi<1&&x.cost>=avgCost).sort((a,b)=>b.cost-a.cost).slice(0,3);
+  if(bad.length){
+    const items=bad.map(x=>`<b>${x.sku||x.pid}</b>（消耗 ${money(x.cost)}，ROI <span class="red">${x.roi.toFixed(2)}</span>）`).join("、");
+    out.push({cls:"bad",ic:"⚠",html:`<b>低效待优化</b>（高消耗低产出）：${items}。建议优化创意/出价或暂停。`});
+  }
+
+  const byCost=[...arr].sort((a,b)=>b.cost-a.cost);
+  const top3=byCost.slice(0,3), top3Cost=top3.reduce((s,x)=>s+x.cost,0);
+  const share=totCost?(top3Cost/totCost*100):0;
+  if(top3.length){
+    const items=top3.map(x=>`${x.sku||x.pid}(${money(x.cost)})`).join("、");
+    out.push({cls:"warn",ic:"▦",html:`<b>消耗集中度</b>：Top3 款号（${items}）占全部消耗的 <span class="hi">${share.toFixed(1)}%</span>${share>60?'，投放较集中，需关注单款波动风险。':'，分布相对分散。'}`});
+  }
+
+  document.getElementById("aiList").innerHTML = out.map(o=>
+    `<div class="ai-item ${o.cls}"><span class="ic">${o.ic}</span><div class="tx">${o.html}</div></div>`).join("");
+  _lastAI = out.map(o=>({cls:o.cls, ic:o.ic, text:o.html.replace(/<[^>]+>/g,"").replace(/&[a-z]+;/g,"")}));
+
+  /* ===== 建议行动项（按优先级） ===== */
+  const acts=[];
+  const name=x=>`${x.sku||x.pid}`;
+  if(good.length){
+    const names=good.map(name).join("、");
+    acts.push({p:"高",cls:"good",ic:"▲",title:"放大高效款预算",
+      html:`对 ROI≥2 的 <b>${good.length}</b> 款（${names}）逐步加预算 <b>10–20%</b>，预计在不牺牲投产比的前提下扩大成交规模。`});
+  }
+  if(bad.length){
+    const names=bad.map(name).join("、");
+    acts.push({p:"高",cls:"bad",ic:"■",title:"优化或暂停低效款",
+      html:`对 ${bad.length} 款高消耗低产出（${names}）先做创意/出价优化，观察 3–5 天仍 ROI<1 则暂停，释放预算给高效款。`});
+  }
+  if(zero.length){
+    const names=zero.slice(0,3).map(name).join("、");
+    acts.push({p:"中",cls:"warn",ic:"✕",title:"排查零成交款",
+      html:`${zero.length} 款有花费无成交（如 ${names}），优先检查库存是否充足、价格是否有竞争力、详情页/落地页是否异常。`});
+  }
+  if(leadCost!==null && leadCost>5){
+    acts.push({p:"中",cls:"warn",ic:"✦",title:"压降线索成本",
+      html:`当前线索成本 <span class="hi">${money(leadCost)}</span> 偏高，建议优化人群定向、测试不同出价策略，目标压到 5 元以内。`});
+  }
+  if(state.budget>0 && totCost>state.budget){
+    acts.push({p:"中",cls:"bad",ic:"⚠",title:"控制预算超支",
+      html:`已消耗 <b>${money(totCost)}</b> 超过总预算 ${money(state.budget)}，建议收紧低效计划/款号预算，或申请追加预算。`});
+  } else if(state.budget>0){
+    const left=state.budget-totCost;
+    acts.push({p:"低",cls:"info",ic:"✔",title:"预算仍有空间",
+      html:`当前预算内，剩余 <b>${money(left)}</b>。可在高效款（见上）上追加投放以扩大产出。`});
+  }
+  if(roi!==null && roi>=1){
+    acts.push({p:"低",cls:"info",ic:"＋",title:"扩充优势款式/创意",
+      html:`大客方案整体投产健康（ROI ${roi.toFixed(2)}），建议基于高效款特征扩充相似款式、增加优质创意素材，放大优势。`});
+  }
+  if(!acts.length){
+    acts.push({p:"低",cls:"info",ic:"ℹ",title:"暂无需干预",html:"当前筛选范围内数据不足或指标健康，暂无强烈行动建议；持续观察日环比变化即可。"});
+  }
+  const prTag=p=>`<span class="pri ${p==='高'?'h':p==='中'?'m':'l'}">${p}优先级</span>`;
+  document.getElementById("aiActions").innerHTML = acts.map(o=>
+    `<div class="ai-item ${o.cls}"><span class="ic">${o.ic}</span><div class="tx">${prTag(o.p)} <b>${o.title}</b><br>${o.html}</div></div>`).join("");
+  _lastActions = acts.map(o=>({优先级:o.p, 标题:o.title, 内容:o.html.replace(/<[^>]+>/g,"").replace(/&[a-z]+;/g,"")}));
+}
+
+/* ============ 渲染主流程 ============ */
+/* ============ 目标达成视图（月度目标日拆解：实际 vs 目标 + 风险预警） ============ */
+function rateCell(v, invert){
+  if(v==null) return '<td>—</td>';
+  const cls = invert ? (v<=100?'good':(v<=120?'mid':'bad')) : (v>=100?'good':(v>=70?'mid':'bad'));
+  const bw = Math.min(100, v);
+  return `<td><div class="ratecell"><div class="ratebar ${cls}"><i style="width:${bw}%"></i></div><span class="rv ${cls}">${v.toFixed(0)}%</span></div></td>`;
+}
+function computeRisk(T, cumSales){
+  const mean = a => a.length ? a.reduce((s,x)=>s+x,0)/a.length : null;
+  const risks=[];
+  const first = T.find(r=>r.timeProgress!=null) || T[0];
+  const tp = first.timeProgress||0;
+  const monthTarget = first.monthSalesTarget||0;
+  const cumRate = monthTarget ? cumSales/monthTarget*100 : null;
+  const sp = first.salesProgress!=null ? first.salesProgress : (cumRate||0);
+  const gap = sp - tp;
+  if(sp < tp){
+    risks.push({sev: gap<=-5?'high':'med', icon:'⏱', title:'销售节奏落后时间进度',
+      text:`时间进度 ${tp.toFixed(0)}%，销售进度 ${sp.toFixed(0)}%，落后 ${Math.abs(gap).toFixed(0)} 个百分点。若延续此节奏月底大概率完不成目标，建议加大投放/活动力度追赶进度。`});
+  } else {
+    risks.push({sev:'good', icon:'✓', title:'销售节奏符合/领先时间进度',
+      text:`时间进度 ${tp.toFixed(0)}%，销售进度 ${sp.toFixed(0)}%，进度健康。`});
+  }
+  const act = T.filter(r=>(r.actSales||0)>0);
+  if(act.length){
+    const avgConv = mean(act.map(r=>r.convRate).filter(v=>v!=null));
+    if(avgConv!=null){
+      if(avgConv<60) risks.push({sev:'high', icon:'🔁', title:'整店转化率整体偏低',
+        text:`已录入 ${act.length} 天，平均转化完成率仅 ${avgConv.toFixed(0)}%（目标 100%）。转化是成交瓶颈，建议优化详情页/主图/卖点、提升询盘转单。`});
+      else if(avgConv<85) risks.push({sev:'med', icon:'🔁', title:'转化率有提升空间',
+        text:`平均转化完成率 ${avgConv.toFixed(0)}%，尚未达标，可小幅优化转单链路。`});
+    }
+    const avgAov = mean(act.map(r=>r.aovRate).filter(v=>v!=null));
+    if(avgAov!=null && avgAov<80) risks.push({sev:'med', icon:'💰', title:'客单价低于目标',
+      text:`平均客单价完成率 ${avgAov.toFixed(0)}%（目标 100%）。可推组合装/满减提升客单。`});
+    const avgVis = mean(act.map(r=>r.visitorRate).filter(v=>v!=null));
+    if(avgVis!=null && avgVis<80) risks.push({sev:'med', icon:'👀', title:'访客量不足',
+      text:`平均访客完成率 ${avgVis.toFixed(0)}%，流量缺口明显，建议加预算/拓词引流量。`});
+    const over = act.filter(r=>(r.promoMatchRate||0)>120);
+    if(over.length) risks.push({sev: over.some(r=>r.promoMatchRate>150)?'high':'med', icon:'⚠', title:'推广费超预算',
+      text:`有 ${over.length} 天推广费超过预算 120%${over.some(r=>r.promoMatchRate>150)?'（含超 150% 的严重超支）':''}，如：${over.slice(0,3).map(r=>`${r.date} ${r.promoMatchRate.toFixed(0)}%`).join('、')}。需控量或优化投产比。`});
+    const recent = act.slice(-7);
+    const lowDays = recent.filter(r=>(r.salesRate||0)<50);
+    if(lowDays.length) risks.push({sev:'med', icon:'📉', title:'近 7 天多日销售额未达日目标',
+      text:`近 7 天有 ${lowDays.length} 天日销售额完成率低于 50%：${lowDays.map(r=>`${r.date}(${r.salesRate.toFixed(0)}%)`).join('、')}。`});
+  }
+  const order={high:0,med:1,low:2,good:3};
+  risks.sort((a,b)=>order[a.sev]-order[b.sev]);
+  let level = risks.some(r=>r.sev==='high')?'high':(risks.some(r=>r.sev==='med')?'med':'good');
+  return {risks, level, tp, sp, gap, cumRate};
+}
+function renderTarget(){
+  const box=document.getElementById("targetKpis");
+  const rk=document.getElementById("riskBadge");
+  const rlist=document.getElementById("riskList");
+  const rsub=document.getElementById("riskSub");
+  const body=document.getElementById("targetBody");
+  const hint=document.getElementById("targetHint");
+  const cnt=document.getElementById("targetCnt");
+  if(!TARGET.length){
+    box.innerHTML='<div class="tip">未检测到目标表（targets.js）。请把「月度目标日拆解」CSV 放到工作区并运行 build_targets.py 生成 targets.js。</div>';
+    if(rk) rk.style.display='none'; rlist.innerHTML=''; body.innerHTML=''; cnt.textContent=''; hint.textContent='';
+    return;
+  }
+  if(rk) rk.style.display='';
+  // 推广费实际：优先用看板 1688 消耗按日覆盖（与经营表实际推广费互补）
+  const costMap={};
+  allRows().forEach(r=>{ if(r.date){ costMap[r.date]=(costMap[r.date]||0)+(Number(r.cost)||0); } });
+  const T = TARGET.map(r=>{ const o={...r};
+    if((o.actPromo==null||o.actPromo===0) && costMap[o.date]){
+      o.actPromo=costMap[o.date];
+      o.promoMatchRate = o.promoBudget ? o.actPromo/o.promoBudget*100 : null;
+      o.promoFromCost=true;
+    }
+    return o;
+  });
+  const first=T[0];
+  const monthTarget = first.monthSalesTarget||0;
+  // 累计实际销售额：对每日「实际日销售额(actSales)」求和，与下方每日对照表口径一致
+  const cumSales = T.reduce((s,r)=> s + (Number(r.actSales)||0), 0);
+  const {risks, level, tp, sp, cumRate} = computeRisk(T, cumSales);
+  const monthPromoBudget = T.reduce((s,r)=>s+(r.promoBudget||0),0);
+  const cumPromo = T.reduce((s,r)=>s+(r.actPromo||0),0);
+  const promoMatch = monthPromoBudget ? cumPromo/monthPromoBudget*100 : null;
+  const cards={
+    sales:[ {t:'月度销售额目标', v:money(monthTarget), c:''},
+            {t:'累计实际销售额', v:money(cumSales), c:''},
+            {t:'销售额完成率', v:(cumRate!=null?cumRate.toFixed(1):'—')+'%', c: cumRate!=null&&cumRate<tp?'warn':'good', d:'时间进度 '+tp.toFixed(0)+'%'} ],
+    prog:[  {t:'时间进度', v:tp.toFixed(0)+'%', c:''},
+            {t:'销售进度', v:sp.toFixed(0)+'%', c: sp<tp?'warn':'good'},
+            {t:'进度偏差', v:(sp-tp>=0?'+':'')+(sp-tp).toFixed(0)+'pp', c: sp<tp?'warn':'good', d: sp<tp?'落后时间进度':'领先时间进度'} ],
+    promo:[ {t:'累计推广费', v:money(cumPromo), c:'cost'},
+            {t:'推广预算匹配率', v:(promoMatch!=null?promoMatch.toFixed(0):'—')+'%', c: promoMatch!=null&&promoMatch>120?'warn':(promoMatch!=null&&promoMatch>100?'cost':'good'), d:'月度预算 '+money(monthPromoBudget)} ]
+  };
+  /* 分组宽度按卡片数分配（--w），组内列数按卡片数（--n）→ 各组卡片宽度一致，整行不留孤卡 */
+  const renderGroup=(title, arr)=> `<div class="tkpi-group" style="--w:${arr.length}"><div class="tkpi-group-title">${title}</div><div class="tkpi-row" style="--n:${arr.length}">${arr.map(c=>`<div class="tkpi"><div class="t">${c.t}</div><div class="v${c.c?' '+c.c:''}">${c.v}</div><div class="d">${c.d||''}</div></div>`).join('')}</div></div>`;
+  box.innerHTML = renderGroup('销售目标', cards.sales) + renderGroup('进度节奏', cards.prog) + renderGroup('推广预算', cards.promo);
+  const lvText={high:'高风险',med:'需关注',low:'低风险',good:'健康'}[level];
+  if(rk){ rk.className='risk-badge '+level; rk.textContent=lvText; }
+  const valid = T.filter(r=>(r.actSales||0)>0 || (r.actPromo||0)>0);
+  if(rsub) rsub.textContent = `共 ${risks.filter(r=>r.sev!=='good').length} 项预警 · 数据截至 ${valid.length?valid[valid.length-1].date:first.date}`;
+  rlist.innerHTML = risks.map(r=>`<div class="risk-item ${r.sev}"><span class="ric">${r.icon}</span><div><div class="rt">${r.title}</div><div class="rx">${r.text}</div></div></div>`).join('');
+  const cols=[
+    {k:'date',t:'日期'},{k:'rhythm',t:'营销节奏'},
+    {k:'estDaySales',t:'目标日销售额',money:1},{k:'actSales',t:'实际日销售额',money:1},{rate:'salesRate',t:'日完成率'},
+    {k:'estDayVisitors',t:'目标访客',intf:1},{k:'actVisitors',t:'实际访客',intf:1},{rate:'visitorRate',t:'访客完成率'},
+    {k:'estDayConv',t:'目标转化',pctf:1},{k:'actConv',t:'实际转化',pctf:1},{rate:'convRate',t:'转化完成率'},
+    {k:'estDayAov',t:'目标客单',money:1},{k:'actAov',t:'实际客单',money:1},{rate:'aovRate',t:'客单价完成率'},
+    {k:'promoBudget',t:'推广预算',money:1},{k:'actPromo',t:'实际推广费',money:1},{rate:'promoMatchRate',t:'预算匹配率',invert:1},
+  ];
+  let html=`<table class="dtable"><thead><tr>`+cols.map(c=>`<th>${c.t}</th>`).join('')+`</tr></thead><tbody>`;
+  T.forEach(r=>{
+    html+='<tr>';
+    cols.forEach(c=>{
+      if(c.rate) html+=rateCell(r[c.rate], c.invert);
+      else if(c.k==='date') html+=`<td>${r.date}${r.weekday?` <span class="tip">${r.weekday}</span>`:''}</td>`;
+      else if(c.k==='rhythm') html+= r.rhythm?`<td><span class="rhythm-tag">${r.rhythm}</span></td>`:`<td>—</td>`;
+      else if(c.money) html+=`<td>${r[c.k]!=null?money(r[c.k]):'—'}</td>`;
+      else if(c.intf) html+=`<td>${r[c.k]!=null?fmt(r[c.k]):'—'}</td>`;
+      else if(c.pctf) html+=`<td>${r[c.k]!=null?pct(r[c.k]):'—'}</td>`;
+      else html+=`<td>${r[c.k]!=null?r[c.k]:'—'}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  body.innerHTML=html;
+  cnt.textContent=' '+T.length+' 天';
+  if(hint) hint.textContent = (first.year?first.year.toFixed(0):'')+'年'+(first.month?first.month.toFixed(0):'')+'月 · 目标 '+money(monthTarget);
+}
+
+/* ============ 推广消耗分析（4 视图） ============ */
+const CONSUME_PAL = ["#2f6bff","#15a35a","#f59e0b","#7c3aed","#e23b3b","#0ea5e9","#db2777","#65a30d"];
+const CONSUME_VIEWS = { struct:'consStruct', plan:'consPlan', rank:'consRank', daily:'consDaily', item:'consItem' };
+let consItemAll=[]; // 单品完整列表（供搜索过滤）
+function consumeProductRows(){ return dimRows("商品"); }
+// 按 keyFn 分组，对核心指标求和
+function groupSum(rows, keyFn){
+  const m={};
+  rows.forEach(r=>{
+    const k=keyFn(r);
+    if(k==null||k==='') return;
+    if(!m[k]) m[k]={cost:0,imp:0,clk:0,gmv:0,ord:0,inq:0,lead:0,cart:0,favP:0,favS:0,n:0};
+    const o=m[k];
+    o.cost+=Number(r.cost)||0; o.imp+=Number(r.imp)||0; o.clk+=Number(r.clk)||0;
+    o.gmv+=Number(r.gmv)||0; o.ord+=Number(r.ord)||0; o.inq+=Number(r.inq)||0;
+    o.lead+=Number(r.lead)||0; o.cart+=Number(r.cart)||0;
+    o.favP+=Number(r.favP)||0; o.favS+=Number(r.favS)||0; o.n++;
+  });
+  return m;
+}
+function populateConsumeSelectors(){
+  const prows=consumeProductRows();
+  const mapKey=r=>r.pid||r.sku||r.title;
+  // 日期（降序）
+  const dates=[...new Set(prows.map(r=>r.date).filter(Boolean))].sort().reverse();
+  const daySel=document.getElementById('consDay'); const curDay=daySel.value;
+  daySel.innerHTML=dates.map(d=>`<option value="${d}">${d}${calWeek(d)?' · '+calWeek(d):''}</option>`).join('');
+  daySel.value = dates.includes(curDay)?curDay:(dates.length?dates[0]:'');
+  // 计划（按消耗降序）
+  const byPlan=groupSum(prows, r=>r.plan);
+  const plans=Object.keys(byPlan).sort((a,b)=>byPlan[b].cost-byPlan[a].cost);
+  const rpSel=document.getElementById('consRankPlan'); const curPlan=rpSel.value;
+  rpSel.innerHTML=plans.map(p=>`<option value="${p}">${p}</option>`).join('');
+  rpSel.value = plans.includes(curPlan)?curPlan:(plans.length?plans[0]:'');
+  // 单品（按消耗降序）
+  const byPid=groupSum(prows, mapKey);
+  const items=Object.keys(byPid).sort((a,b)=>byPid[b].cost-byPid[a].cost)
+    .map(k=>{ const r=prows.find(x=>mapKey(x)===k); return {key:k, lbl:r.sku||k, title:r.title||''}; });
+  consItemAll=items;
+  const itSel=document.getElementById('consItemSel'); const curItem=itSel.value;
+  const q=(document.getElementById('consItemSearch').value||"").trim().toLowerCase();
+  const filtered = q? items.filter(it=> it.key.toLowerCase().includes(q) || it.lbl.toLowerCase().includes(q)) : items;
+  itSel.innerHTML=filtered.map(it=>`<option value="${it.key}">${it.lbl}</option>`).join('');
+  if(filtered.some(it=>it.key===curItem)) itSel.value=curItem;
+  else if(filtered.length) itSel.value=filtered[0].key;
+  // 单品所属计划筛选
+  const ipSel=document.getElementById('consItemPlan'); const curIp=ipSel.value;
+  const pset=[...new Set(prows.filter(r=>mapKey(r)===itSel.value).map(r=>r.plan).filter(Boolean))].sort();
+  ipSel.innerHTML='<option value="">全部计划</option>'+pset.map(p=>`<option value="${p}">${p}</option>`).join('');
+  ipSel.value = pset.includes(curIp)?curIp:'';
+}
+/* 单品搜索：按款号或商品名模糊过滤下拉 */
+function filterConsItem(){
+  const q=(document.getElementById('consItemSearch').value||"").trim().toLowerCase();
+  const sel=document.getElementById('consItemSel');
+  const cur=sel.value;
+  const list= q? consItemAll.filter(it=> it.key.toLowerCase().includes(q) || it.lbl.toLowerCase().includes(q) || (it.title||'').toLowerCase().includes(q)) : consItemAll;
+  sel.innerHTML=list.map(it=>`<option value="${it.key}">${it.lbl}</option>`).join('');
+  if(list.some(it=>it.key===cur)) sel.value=cur;
+  else if(list.length){ sel.value=list[0].key; renderConsItem(); }
+}
+function renderConsume(){
+  const v=state.consumeView||'struct';
+  Object.keys(CONSUME_VIEWS).forEach(c=>{ document.getElementById(CONSUME_VIEWS[c]).style.display = (c===v)?'':'none'; });
+  if(v==='struct') renderConsStruct();
+  else if(v==='plan') renderConsPlan();
+  else if(v==='rank') renderConsRank();
+  else if(v==='daily') renderConsDaily();
+  else if(v==='item') renderConsItem();
+}
+/* 1) 日消耗结构：当天总消耗 × 各计划占比 */
+function renderConsStruct(){
+  const day=document.getElementById('consDay').value;
+  const prows=consumeProductRows().filter(r=>r.date===day);
+  const byPlan=groupSum(prows, r=>r.plan);
+  const plans=Object.keys(byPlan).filter(p=>byPlan[p].cost>0).sort((a,b)=>byPlan[b].cost-byPlan[a].cost);
+  const chart=document.getElementById('consStructChart'), tbl=document.getElementById('consStructTable'), hint=document.getElementById('consStructHint');
+  const total=plans.reduce((s,p)=>s+byPlan[p].cost,0);
+  if(!plans.length){ chart.innerHTML='<div class="muted">该日无消耗数据</div>'; tbl.innerHTML=''; hint.textContent=''; return; }
+  const items=plans.map((p,i)=>({id:p,label:p,value:byPlan[p].cost,color:CONSUME_PAL[i%CONSUME_PAL.length]}));
+  chart.innerHTML=planDonut(items);
+  let html=`<table class="dtable"><thead><tr><th>计划</th><th>消耗</th><th>占比</th><th>广告引导金额</th></tr></thead><tbody>`;
+  let gmvTot=0;
+  plans.forEach(p=>{ const o=byPlan[p]; const share=total?o.cost/total*100:0; gmvTot+=o.gmv;
+    html+=`<tr><td>${p}</td><td>${money(o.cost)}</td><td>${share.toFixed(1)}%</td><td>${money(o.gmv)}</td></tr>`; });
+  html+=`<tr class="tfoot"><td>合计</td><td>${money(total)}</td><td>100%</td><td>${money(gmvTot)}</td></tr></tbody></table>`;
+  tbl.innerHTML=html; hint.textContent=`${day} 当日总消耗 ${money(total)}`;
+}
+/* 2) 各计划消耗汇总（受全局日期筛选） */
+function renderConsPlan(){
+  const prows=applyFilter(consumeProductRows());
+  const byPlan=groupSum(prows, r=>r.plan);
+  const plans=Object.keys(byPlan).filter(p=>byPlan[p].cost>0||byPlan[p].gmv>0).sort((a,b)=>byPlan[b].cost-byPlan[a].cost);
+  const tbl=document.getElementById('consPlanTable'), hint=document.getElementById('consPlanHint');
+  const chart=document.getElementById('consPlanChart');
+  hint.textContent=`统计范围：${state.dateFrom||'起'} ~ ${state.dateTo||'今'}（受全局日期筛选）`;
+  if(!plans.length){ tbl.innerHTML='<div class="muted">当前筛选下无计划消耗数据</div>'; if(chart) chart.innerHTML=''; return; }
+  const dates=[...new Set(prows.map(r=>r.date))].sort();
+  const pal=["#2f6bff","#15a35a","#f59e0b","#7c3aed","#e23b3b","#0ea5e9","#db2777","#65a30d"];
+  const series=plans.map((p,i)=>({name:p,color:pal[i%pal.length],values:dates.map(d=>sum(prows.filter(r=>r.date===d&&r.plan===p),"cost"))}));
+  if(chart) chart.innerHTML = dates.length? stackedVBar(dates,series,{yfmt:money}) : '';
+  let html=`<table class="dtable"><thead><tr><th>计划</th><th>消耗</th><th>广告引导金额</th><th>点击量</th><th>点击率</th><th>PPC</th><th>ROI</th><th>订单</th><th>询盘</th></tr></thead><tbody>`;
+  const T={cost:0,gmv:0,clk:0,imp:0,ord:0,inq:0};
+  plans.forEach(p=>{ const o=byPlan[p]; T.cost+=o.cost;T.gmv+=o.gmv;T.clk+=o.clk;T.imp+=o.imp;T.ord+=o.ord;T.inq+=o.inq;
+    html+=`<tr><td>${p}</td><td>${money(o.cost)}</td><td>${money(o.gmv)}</td><td>${fmt(o.clk)}</td><td>${pct(wCtr([o]))}</td><td>${money(o.clk?o.cost/o.clk:null)}</td><td>${o.cost?(o.gmv/o.cost).toFixed(2):'—'}</td><td>${fmt(o.ord)}</td><td>${fmt(o.inq)}</td></tr>`; });
+  html+=`<tr class="tfoot"><td>合计</td><td>${money(T.cost)}</td><td>${money(T.gmv)}</td><td>${fmt(T.clk)}</td><td>${pct(T.imp?T.clk/T.imp:null)}</td><td>${money(T.clk?T.cost/T.clk:null)}</td><td>${T.cost?(T.gmv/T.cost).toFixed(2):'—'}</td><td>${fmt(T.ord)}</td><td>${fmt(T.inq)}</td></tr></tbody></table>`;
+  tbl.innerHTML=html;
+}
+/* 3) 各计划商品消耗排行 Top15 */
+function renderConsRank(){
+  const plan=document.getElementById('consRankPlan').value;
+  const prows=applyFilter(consumeProductRows()).filter(r=>r.plan===plan);
+  const mapKey=r=>r.sku||r.pid||r.title;
+  const byPid=groupSum(prows, mapKey);
+  const pids=Object.keys(byPid).sort((a,b)=>byPid[b].cost-byPid[a].cost).slice(0,15);
+  const chart=document.getElementById('consRankChart'), tbl=document.getElementById('consRankTable');
+  if(!pids.length){ chart.innerHTML='<div class="muted">该计划下无商品消耗数据</div>'; tbl.innerHTML=''; return; }
+  const items=pids.map(pid=>{ const r=prows.find(x=>mapKey(x)===pid); return {id:pid,label:r.sku||pid,value:byPid[pid].cost,color:'#ff9a3d'}; });
+  chart.innerHTML=hBar(items,{yfmt:money});
+  let html=`<table class="dtable"><thead><tr><th>排名</th><th>款号</th><th>商品</th><th>消耗</th><th>广告引导金额</th><th>PPC</th><th>ROI</th></tr></thead><tbody>`;
+  pids.forEach((pid,i)=>{ const o=byPid[pid]; const r=prows.find(x=>mapKey(x)===pid);
+    html+=`<tr><td>${i+1}</td><td>${r.sku||'—'}</td><td style="text-align:left">${(r.title||'').slice(0,20)}</td><td>${money(o.cost)}</td><td>${money(o.gmv)}</td><td>${money(o.clk?o.cost/o.clk:null)}</td><td>${o.cost?(o.gmv/o.cost).toFixed(2):'—'}</td></tr>`; });
+  html+='</tbody></table>';
+  tbl.innerHTML=html;
+}
+/* 2.5) 日数据：多指标组合图（消耗/成交金额柱 + PPC/点击率/ROI 折线，双 Y 轴） */
+function renderConsDaily(){
+  const prows=applyFilter(consumeProductRows());
+  const dates=[...new Set(prows.map(r=>r.date))].sort();
+  const chart=document.getElementById('consDailyChart');
+  if(!dates.length){ chart.innerHTML='<div class="muted">无数据</div>'; return; }
+  const cost=dates.map(d=>sum(prows.filter(r=>r.date===d),"cost"));
+  const gmv =dates.map(d=>sum(prows.filter(r=>r.date===d),"gmv"));
+  const clk =dates.map(d=>sum(prows.filter(r=>r.date===d),"clk"));
+  const imp =dates.map(d=>sum(prows.filter(r=>r.date===d),"imp"));
+  const ppc =dates.map((d,i)=> clk[i]? cost[i]/clk[i] : null);
+  const ctr =dates.map((d,i)=> (imp[i]&&clk[i])? clk[i]/imp[i] : null);
+  const roi =dates.map((d,i)=> (cost[i]>0&&gmv[i])? gmv[i]/cost[i] : null);
+  const cfg={dates,
+    bars:[{name:"消耗",color:"#ff6a00",values:cost},{name:"广告引导交易金额",color:"#7c3aed",values:gmv}],
+    lines:[
+      {name:"PPC",color:"#15a35a",axis:"left",values:ppc},
+      {name:"点击率",color:"#2f6bff",axis:"right",values:ctr},
+      {name:"广告ROI",color:"#e23b3b",axis:"right",values:roi}
+    ],
+    opt:{yfmtLeft:money, yfmtRight:v=>(v==null?"—":(v*100).toFixed(1)+"%")}};
+  chart.innerHTML=comboChart(cfg);
+}
+/* 4) 单品跨计划日数据（可筛选计划） */
+function renderConsItem(){
+  const key=document.getElementById('consItemSel').value;
+  const planFilter=document.getElementById('consItemPlan').value;
+  const mapKey=r=>r.pid||r.sku||r.title;
+  let rows=applyFilter(consumeProductRows()).filter(r=>mapKey(r)===key);
+  if(planFilter) rows=rows.filter(r=>r.plan===planFilter);
+  rows=rows.slice().sort((a,b)=>a.date<b.date?-1:1);
+  const tbl=document.getElementById('consItemTable');
+  const chart=document.getElementById('consItemChart');
+  if(!rows.length){ tbl.innerHTML='<div class="muted">该单品在当前范围内无数据</div>'; if(chart) chart.innerHTML=''; return; }
+  const dates=rows.map(r=>r.date);
+  const cost=rows.map(r=>r.cost);
+  const ppc=rows.map(r=>r.clk?r.cost/r.clk:null);
+  const roi=rows.map(r=>r.cost?r.gmv/r.cost:null);
+  if(chart) chart.innerHTML=comboChart({dates,
+    bars:[{name:"消耗",color:"#ff6a00",values:cost}],
+    lines:[{name:"PPC",color:"#15a35a",axis:"left",values:ppc},{name:"广告ROI",color:"#7c3aed",axis:"right",values:roi}],
+    opt:{yfmtLeft:money, yfmtRight:v=>(v==null?"—":v.toFixed(2))}});
+  let html=`<table class="dtable"><thead><tr><th>日期</th><th>计划</th><th>消耗</th><th>PPC</th><th>ROI</th><th>广告引导金额</th><th>点击量</th><th>点击率</th></tr></thead><tbody>`;
+  rows.forEach(r=>{ const cpc=r.clk?r.cost/r.clk:null; const roi=r.cost?r.gmv/r.cost:null;
+    html+=`<tr><td>${r.date}</td><td>${r.plan||'—'}</td><td>${money(r.cost)}</td><td>${money(cpc)}</td><td>${roi!=null?roi.toFixed(2):'—'}</td><td>${money(r.gmv)}</td><td>${fmt(r.clk)}</td><td>${pct(r.ctr)}</td></tr>`; });
+  html+='</tbody></table>';
+  tbl.innerHTML=html;
+}
+
+/* ============ 推广周报 / 月报 ============ */
+function aggAll(dateKeyFn){
+  /* 合并三源（1688推广 + 聚水潭 + 生意参谋）按周期聚合，供周报/月报。
+     聚水潭/生意参谋已预聚合为日级全店汇总(JST_DAY/SYGC_DAY)，这里按周/月再聚合，避免遍历数万条明细。 */
+  const promo=applyFilter(dimRows("商品"));
+  const m=new Map();
+  function ensure(k,d){
+    if(!k) return null;
+    if(!m.has(k)) m.set(k,{_key:k, d0:d, d1:d,
+      imp:0,vexp:0,clk:0,cost:0,cart:0,coupon:0,ord:0,ordAd:0,inq:0,lead:0,gmv:0,
+      jReal:0,jRet:0,jShip:0,jQty:0,jAmt:0,jGmW:0,
+      sImp:0,sVexp:0,sVis:0,sClk:0,sCartP:0,sPayB:0,sPayAmt:0,sPaidVis:0});
+    const o=m.get(k);
+    if(d<o.d0) o.d0=d; if(d>o.d1) o.d1=d;
+    return o;
+  }
+  promo.forEach(r=>{ if(!r||!r.date) return; const o=ensure(dateKeyFn(r.date),r.date); if(!o) return;
+    ["imp","vexp","clk","cost","cart","coupon","ord","ordAd","inq","lead","gmv"].forEach(f=>o[f]+=Number(r[f])||0); });
+  for(const d in JST_DAY){
+    if(state.dateFrom && d<state.dateFrom) continue;
+    if(state.dateTo && d>state.dateTo) continue;
+    const o=ensure(dateKeyFn(d),d); if(!o) continue;
+    const r=JST_DAY[d];
+    o.jReal+=r.amount||0; o.jRet+=r.retAmt||0; o.jShip+=r.shipAmt||0;
+    o.jQty+=r.qty||0; o.jAmt+=r.amount||0; o.jGmW+=r.gmW||0;
+  }
+  for(const d in SYGC_DAY){
+    if(state.dateFrom && d<state.dateFrom) continue;
+    if(state.dateTo && d>state.dateTo) continue;
+    const o=ensure(dateKeyFn(d),d); if(!o) continue;
+    const r=SYGC_DAY[d];
+    o.sImp+=r.imp||0; o.sVexp+=r.vexp||0; o.sVis+=r.visitors||0;
+    o.sClk+=r.clk||0; o.sCartP+=r.cartP||0; o.sPayB+=r.payBuyers||0;
+    o.sPayAmt+=r.payAmt||0; o.sPaidVis+=r.paidVisW||0;
+  }
+  return [...m.values()].map(o=>{
+    o.ctr=o.imp?o.clk/o.imp:null; o.cpc=o.clk?o.cost/o.clk:null;
+    o.roi=o.cost?o.gmv/o.cost:null; o.leadCost=o.lead?o.cost/o.lead:null; o.inqCost=o.inq?o.cost/o.inq:null;
+    o.leadCvr=o.clk?o.lead/o.clk:null; o.inqCvr=o.clk?o.inq/o.clk:null; o.conv=o.clk?o.ord/o.clk:null;
+    o.refundRate=o.jShip?o.jRet/o.jShip:null;
+    o.gm=o.jAmt?o.jGmW/o.jAmt:null;
+    o.adCtr=o.sVexp?o.sClk/o.sVexp:null;
+    o.cartRate=o.sVis?o.sCartP/o.sVis:null;
+    o.convRate=o.sVis?o.sPayB/o.sVis:null;
+    o.paidVisitorRatio=o.sVis?o.sPaidVis/o.sVis:null;
+    return o;
+  }).sort((a,b)=>a._key<b._key?-1:1);
+}
+function buildReportTable(cols, list){
+  let html=`<table class="dtable"><thead><tr>${cols.map(c=>`<th>${c.t}</th>`).join('')}</tr></thead><tbody>`;
+  list.forEach(o=>{
+    html+='<tr>'+cols.map(c=>{
+      const val=c.v?c.v(o):null;
+      if(val==null||val==="") return '<td>—</td>';
+      return `<td>${c.f?c.f(val):val}</td>`;
+    }).join('')+'</tr>';
+  });
+  return html+'</tbody></table>';
+}
+function renderWeekly(){
+  const list=aggAll(d=>{ const c=calOf(d); return c.week? d.slice(0,4)+"-"+c.week : null; });
+  const body=document.getElementById('weeklyBody'), hint=document.getElementById('weeklyHint');
+  hint.textContent=`按周聚合（来源：1688推广 + 聚水潭 + 生意参谋）· 共 ${list.length} 周 · 销售额/退款/毛利率来自聚水潭，访客/点击/加购/转化来自生意参谋（生意参谋自 2026 年起有数，2025 年各周无流量数据）；推广侧仅 8 月起有数`;
+  if(!list.length){ body.innerHTML='<div class="muted">无数据</div>'; return; }
+  const cols=[
+    {t:"周", v:o=>o._key.slice(5)}, {t:"年", v:o=>o._key.slice(0,4)},
+    {t:"日期区间", v:o=>o.d0+" ~ "+o.d1},
+    {t:"真实销售额", v:o=>o.jReal, f:money},
+    {t:"退款金额", v:o=>o.jRet, f:money},
+    {t:"退款率", v:o=>o.refundRate, f:v=>(v*100).toFixed(2)+"%"},
+    {t:"销售毛利率", v:o=>o.gm, f:v=>(v*100).toFixed(1)+"%"},
+    {t:"访客数", v:o=>o.sVis, f:fmt},
+    {t:"推广访客占比", v:o=>o.paidVisitorRatio, f:v=>(v*100).toFixed(1)+"%"},
+    {t:"展现量", v:o=>o.sImp, f:fmt},
+    {t:"广告点击量", v:o=>o.sClk, f:fmt},
+    {t:"点击率(参谋)", v:o=>o.adCtr, f:v=>(v*100).toFixed(2)+"%"},
+    {t:"加购数(参谋)", v:o=>o.sCartP, f:fmt},
+    {t:"加购率(参谋)", v:o=>o.cartRate, f:v=>(v*100).toFixed(2)+"%"},
+    {t:"支付买家数", v:o=>o.sPayB, f:fmt},
+    {t:"转化率(参谋)", v:o=>o.convRate, f:v=>(v*100).toFixed(2)+"%"},
+    {t:"推广花费", v:o=>o.cost, f:money},
+    {t:"推广点击量", v:o=>o.clk, f:fmt},
+    {t:"费比", v:o=>o.gmv?o.cost/o.gmv:null, f:v=>(v*100).toFixed(1)+"%"},
+    {t:"推广总成交金额", v:o=>o.gmv, f:money},
+    {t:"加购数", v:o=>o.cart, f:fmt},
+    {t:"线索数", v:o=>o.lead, f:fmt},
+    {t:"提交订单数", v:o=>o.ord, f:fmt},
+    {t:"广告引导订单数", v:o=>o.ordAd, f:fmt}
+  ];
+  body.innerHTML=buildReportTable(cols, list);
+  renderReportAI(list, 'weekly');
+}
+function aggSkuMonth(){
+  /* 单品月表：以 1688推广 单品×月 为基础，enrich 聚水潭/生意参谋 的 单品×月 汇总(JST_SKU/SYGC_SKU)。 */
+  const rows=applyFilter(dimRows("商品"));
+  const m=new Map();
+  rows.forEach(r=>{
+    const key=r.date.slice(0,7)+"|"+(r.sku||r.pid||r.title);
+    if(!m.has(key)) m.set(key,{_key:r.date.slice(0,7), sku:r.sku||"", plan:r.plan||"", imp:0,vexp:0,clk:0,cost:0,cart:0,coupon:0,ord:0,ordAd:0,inq:0,lead:0,gmv:0});
+    const o=m.get(key);
+    ["imp","vexp","clk","cost","cart","coupon","ord","ordAd","inq","lead","gmv"].forEach(f=>o[f]+=Number(r[f])||0);
+  });
+  return [...m.values()].map(o=>{
+    o.ctr=o.imp?o.clk/o.imp:null; o.cpc=o.clk?o.cost/o.clk:null; o.roi=o.cost?o.gmv/o.cost:null;
+    o.leadCvr=o.clk?o.lead/o.clk:null; o.inqCvr=o.clk?o.inq/o.clk:null; o.conv=o.clk?o.ord/o.clk:null;
+    const j=JST_SKU[o.sku] && JST_SKU[o.sku][o._key];
+    if(j){ o.jReal=j.amount||0; o.jRet=j.retAmt||0; o.jQty=j.qty||0; o.refundRate=j.shipAmt?j.retAmt/j.shipAmt:null; o.gm=j.amount?j.gmW/j.amount:null; }
+    const s=SYGC_SKU[o.sku] && SYGC_SKU[o.sku][o._key];
+    if(s){ o.sVis=s.visitors||0; o.sClk=s.clk||0; o.sVexp=s.vexp||0; o.sCartP=s.cartP||0; o.sPayB=s.payBuyers||0;
+      o.adCtr=s.vexp?s.clk/s.vexp:null; o.cartRate=s.visitors?s.cartP/s.visitors:null; o.convRate=s.visitors?s.payBuyers/s.visitors:null; }
+    return o;
+  }).sort((a,b)=> a._key<b._key?-1 : a._key>b._key?1 : (a.sku<b.sku?-1:1));
+}
+function renderMonthly(){
+  const list=aggAll(d=> d.slice(0,7));
+  const body=document.getElementById('monthlyBody'), hint=document.getElementById('monthlyHint');
+  hint.textContent=`按月聚合（来源：1688推广 + 聚水潭 + 生意参谋）· 共 ${list.length} 月 · 销售额/退款/毛利率来自聚水潭，访客/点击/加购/转化来自生意参谋（生意参谋自 2026 年起有数，2025 年各月无流量数据）；推广侧仅 8 月起有数`;
+  list.forEach((o,i)=>{ const base=o.jReal||o.gmv; const prev=list[i-1]&&(list[i-1].jReal||list[i-1].gmv); o._mom=(i>0&&prev)?(base-prev)/prev:null; });
+  const cols=[
+    {t:"月", v:o=>o._key}, {t:"年", v:o=>o._key.slice(0,4)},
+    {t:"日期区间", v:o=>o.d0+" ~ "+o.d1},
+    {t:"真实销售额", v:o=>o.jReal, f:money},
+    {t:"退款金额", v:o=>o.jRet, f:money},
+    {t:"退款率", v:o=>o.refundRate, f:v=>(v*100).toFixed(2)+"%"},
+    {t:"销售毛利率", v:o=>o.gm, f:v=>(v*100).toFixed(1)+"%"},
+    {t:"访客数", v:o=>o.sVis, f:fmt},
+    {t:"推广访客占比", v:o=>o.paidVisitorRatio, f:v=>(v*100).toFixed(1)+"%"},
+    {t:"展现量", v:o=>o.sImp, f:fmt},
+    {t:"广告点击量", v:o=>o.sClk, f:fmt},
+    {t:"点击率(参谋)", v:o=>o.adCtr, f:v=>(v*100).toFixed(2)+"%"},
+    {t:"加购数(参谋)", v:o=>o.sCartP, f:fmt},
+    {t:"加购率(参谋)", v:o=>o.cartRate, f:v=>(v*100).toFixed(2)+"%"},
+    {t:"支付买家数", v:o=>o.sPayB, f:fmt},
+    {t:"转化率(参谋)", v:o=>o.convRate, f:v=>(v*100).toFixed(2)+"%"},
+    {t:"推广花费", v:o=>o.cost, f:money},
+    {t:"推广点击量", v:o=>o.clk, f:fmt},
+    {t:"销售额环比", v:o=>o._mom, f:v=>(v*100).toFixed(1)+"%"},
+    {t:"费比", v:o=>o.gmv?o.cost/o.gmv:null, f:v=>(v*100).toFixed(1)+"%"},
+    {t:"推广总成交金额", v:o=>o.gmv, f:money},
+    {t:"加购数", v:o=>o.cart, f:fmt},
+    {t:"提交订单数", v:o=>o.ord, f:fmt},
+    {t:"广告引导订单数", v:o=>o.ordAd, f:fmt}
+  ];
+  body.innerHTML=buildReportTable(cols, list);
+  const sbody=document.getElementById('monthlySkuBody');
+  const skuList=aggSkuMonth();
+  if(!skuList.length){ sbody.innerHTML='<div class="muted">无数据</div>'; return; }
+  const scols=[
+    {t:"年份", v:o=>o._key.slice(0,4)}, {t:"月份", v:o=>o._key.slice(5)}, {t:"款号", v:o=>o.sku},
+    {t:"真实销售额", v:o=>o.jReal, f:money}, {t:"退款金额", v:o=>o.jRet, f:money},
+    {t:"退款率", v:o=>o.refundRate, f:v=>(v==null?"—":(v*100).toFixed(2)+"%")},
+    {t:"销售毛利率", v:o=>o.gm, f:v=>(v==null?"—":(v*100).toFixed(1)+"%")},
+    {t:"访客数", v:o=>o.sVis, f:fmt}, {t:"广告点击量", v:o=>o.sClk, f:fmt},
+    {t:"点击率(参谋)", v:o=>o.adCtr, f:v=>(v==null?"—":(v*100).toFixed(2)+"%")},
+    {t:"加购率(参谋)", v:o=>o.cartRate, f:v=>(v==null?"—":(v*100).toFixed(2)+"%")},
+    {t:"转化率(参谋)", v:o=>o.convRate, f:v=>(v==null?"—":(v*100).toFixed(2)+"%")},
+    {t:"消耗量", v:o=>o.cost, f:money}, {t:"广告引导交易金额", v:o=>o.gmv, f:money},
+    {t:"广告投产比", v:o=>o.roi, f:v=>v==null?"—":v.toFixed(2)},
+    {t:"广告点击成本", v:o=>o.cpc, f:money}, {t:"点击率", v:o=>o.ctr, f:v=>v==null?"—":(v*100).toFixed(2)+"%"},
+    {t:"加购数", v:o=>o.cart, f:fmt}, {t:"转化率", v:o=>o.conv, f:v=>v==null?"—":(v*100).toFixed(2)+"%"},
+    {t:"线索转化率", v:o=>o.leadCvr, f:v=>v==null?"—":(v*100).toFixed(2)+"%"},
+    {t:"询盘转化率", v:o=>o.inqCvr, f:v=>v==null?"—":(v*100).toFixed(2)+"%"},
+    {t:"曝光量", v:o=>o.imp, f:fmt}, {t:"点击量", v:o=>o.clk, f:fmt},
+    {t:"广告引导订单数", v:o=>o.ordAd, f:fmt}, {t:"提交订单数", v:o=>o.ord, f:fmt}, {t:"推广方案", v:o=>o.plan}
+  ];
+  sbody.innerHTML=buildReportTable(scols, skuList);
+  renderReportAI(list, 'monthly');
+}
+/* ============ 推广周报/月报 AI 结论 ============ */
+function renderReportAI(list, kind){
+  const el=document.getElementById(kind==='weekly'?'weeklyAI':'monthlyAI');
+  if(!el) return;
+  const lab=kind==='weekly'?'周':'月';
+  if(!list || list.length===0){ el.innerHTML='<div class="muted">暂无数据，无法生成结论。</div>'; return; }
+  const totCost=list.reduce((s,o)=>s+(o.cost||0),0);
+  const totGmv=list.reduce((s,o)=>s+(o.gmv||0),0);
+  const roi=totCost?totGmv/totCost:null;
+  const fee=totGmv?totCost/totGmv:null;
+  const out=[];
+  out.push({cls: roi!==null?(roi>=1?'good':'bad'):'info', ic:'◆', html:
+    `统计区间内共 <b>${list.length}</b> 个${lab}，累计推广花费 <span class="hi">${money(totCost)}</span>，广告引导成交 <span class="hi">${money(totGmv)}</span>`+
+    (roi!==null?`，整体投产 ROI <b class="${roi>=1?'grn':''}">${roi.toFixed(2)}</b>，费比 <b>${(fee*100).toFixed(1)}%</b>。`:'。')});
+  if(list.length>=2){
+    const a=list[list.length-2], b=list[list.length-1];
+    const dc=b.cost-a.cost, dcP=a.cost?dc/a.cost*100:0;
+    const dg=b.gmv-a.gmv, dgP=a.gmv?dg/a.gmv*100:0;
+    const rA=a.cost?a.gmv/a.cost:null, rB=b.cost?b.gmv/b.cost:null;
+    const dr=(rA&&rB)?(rB-rA):null;
+    const up=v=>v>=0?'<span class="up">↑</span>':'<span class="down">↓</span>';
+    out.push({cls:'info',ic:'↻',html:
+      `最近${lab}环比（${b._key} vs ${a._key}）：花费 ${up(dc)} <b>${money(b.cost)}</b>（${dcP>=0?'+':''}${dcP.toFixed(1)}%），`+
+      `成交 ${up(dg)} <b>${money(b.gmv)}</b>（${dgP>=0?'+':''}${dgP.toFixed(1)}%）`+
+      (dr!==null?`，ROI ${dr>=0?'<span class="up">↑</span>':'<span class="down">↓</span>'} <b>${rB.toFixed(2)}</b>（${dr>=0?'+':''}${dr.toFixed(2)}）。`:'。')});
+  }
+  const last=list[list.length-1];
+  const extra=[];
+  if(last.jReal) extra.push(`真实销售额 <span class="hi">${money(last.jReal)}</span>`);
+  if(last.gm!=null) extra.push(`毛利率 <b>${(last.gm*100).toFixed(1)}%</b>`);
+  if(last.refundRate!=null) extra.push(`退款率 <b>${(last.refundRate*100).toFixed(2)}%</b>`);
+  if(last.sVis) extra.push(`访客 <b>${fmt(last.sVis)}</b>`);
+  if(last.convRate!=null) extra.push(`支付转化 <b>${(last.convRate*100).toFixed(2)}%</b>`);
+  if(last.cartRate!=null) extra.push(`加购率 <b>${(last.cartRate*100).toFixed(2)}%</b>`);
+  if(extra.length) out.push({cls:'info',ic:'▤',html:`<b>经营侧（最新${lab} ${last._key}）</b>：${extra.join('，')}。`});
+  const withRoi=list.filter(o=>o.cost>0&&o.gmv>0);
+  if(withRoi.length){
+    const best=[...withRoi].sort((a,b)=>b.gmv/b.cost-a.gmv/a.cost)[0];
+    out.push({cls:'good',ic:'★',html:`<b>最佳${lab}</b>：${best._key}（花费 ${money(best.cost)}，成交 ${money(best.gmv)}，ROI <span class="grn">${(best.gmv/best.cost).toFixed(2)}</span>）。`});
+    if(withRoi.length>1){
+      const worst=[...withRoi].sort((a,b)=>a.gmv/a.cost-b.gmv/b.cost)[0];
+      out.push({cls:'bad',ic:'⚠',html:`<b>最弱${lab}</b>：${worst._key}（花费 ${money(worst.cost)}，成交 ${money(worst.gmv)}，ROI <span class="red">${(worst.gmv/worst.cost).toFixed(2)}</span>）。`});
+    }
+  }
+  const acts=[];
+  if(roi!==null && roi<1) acts.push({cls:'bad',ic:'■',html:`整体 ROI <b>${roi.toFixed(2)}</b> 低于盈亏线，建议压缩低效计划/款号预算，把消耗向高投产${lab}集中。`});
+  else if(roi!==null && roi>=1) acts.push({cls:'good',ic:'＋',html:`整体投产健康（ROI ${roi.toFixed(2)}），可在高效${lab}基础上适度加预算放大成交规模。`});
+  if(totGmv===0) acts.push({cls:'warn',ic:'✕',html:`统计区间内广告引导成交为 0，优先排查店铺/商品状态与投放是否正常。`});
+  if(!acts.length) acts.push({cls:'info',ic:'ℹ',html:`当前${lab}度数据健康，持续观察环比与经营侧指标即可。`});
+  let html = out.map(o=>`<div class="ai-item ${o.cls}"><span class="ic">${o.ic}</span><div class="tx">${o.html}</div></div>`).join("");
+  html += '<div style="font-weight:800;margin:12px 0 6px;color:var(--sub);font-size:13px">行动建议</div>' +
+    acts.map(o=>`<div class="ai-item ${o.cls}"><span class="ic">${o.ic}</span><div class="tx">${o.html}</div></div>`).join("");
+  el.innerHTML = html;
+}
+function tableToCSV(tableEl){
+  if(!tableEl) return '';
+  return [...tableEl.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('th,td')].map(td=>{
+    let s=(td.innerText||'').replace(/\n/g,' ').replace(/"/g,'""'); return '"'+s+'"';
+  }).join(',')).join('\n');
+}
+function exportReportCSV(viewId, filename){
+  const el=document.querySelector('#'+viewId+' table');
+  if(!el) return;
+  const csv='\ufeff'+tableToCSV(el);
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+/* ============ 气温趋势模块 ============ */
+let _weatherInited=false;
+function renderWeather(){
+  const W = window.DASHBOARD_WEATHER || [];
+  const hint=document.getElementById('wxHint');
+  const regionSel=document.getElementById('wxRegion');
+  const citySel=document.getElementById('wxCity');
+  const yearSel=document.getElementById('wxYear');
+  const monthSel=document.getElementById('wxMonth');
+  const metricSel=document.getElementById('wxMetric');
+  const chart=document.getElementById('wxChart');
+  const tbl=document.getElementById('wxBody');
+  const alertBox=document.getElementById('wxAlert');
+  const alertTitle=document.getElementById('wxAlertTitle');
+  if(!W.length){ hint.textContent='暂无可用的气温数据（请重新运行 sync_feishu.py 同步飞书「26年气温数据」表）'; chart.innerHTML=''; tbl.innerHTML=''; if(alertBox)alertBox.innerHTML=''; if(alertTitle)alertTitle.style.display='none'; return; }
+  const CUR_Y=String(new Date().getFullYear());
+  const CUR_M=String(new Date().getMonth()+1).padStart(2,'0');
+  const regions=[...new Set(W.map(r=>r.region))].filter(Boolean).sort();
+  const prevRegion=regionSel.value||(regions.includes('华东')?'华东':regions[0]);
+  regionSel.innerHTML=regions.map(r=>`<option value="${r}" ${r===prevRegion?'selected':''}>${r}</option>`).join('');
+  const years=[...new Set(W.map(r=>r.date?r.date.slice(0,4):null).filter(Boolean))].sort();
+  const prevYear=yearSel.value||(years.includes(CUR_Y)?CUR_Y:years[years.length-1]);
+  yearSel.innerHTML=['<option value="">全部年份</option>'].concat(years.map(y=>`<option value="${y}" ${y===prevYear?'selected':''}>${y}年</option>`)).join('');
+  function fillCities(){
+    const reg=regionSel.value;
+    const cities=[...new Set(W.filter(r=>r.region===reg).map(r=>r.city).filter(Boolean))].sort();
+    citySel.innerHTML=['<option value="">全部城市</option>'].concat(cities.map(c=>`<option value="${c}">${c}</option>`)).join('');
+  }
+  function fillMonths(){
+    const y=yearSel.value;
+    const ms=[...new Set(W.filter(r=>!y||r.date.slice(0,4)===y).map(r=>r.date?Number(r.date.slice(5,7)):null).filter(Boolean))].sort((a,b)=>a-b);
+    const cur=monthSel.value;
+    monthSel.innerHTML='<option value="">全部月份</option>'+ms.map(m=>`<option value="${String(m).padStart(2,'0')}">${m}月</option>`).join('');
+    if(cur && monthSel.querySelector('option[value="'+cur+'"]')) monthSel.value=cur;
+  }
+  fillCities(); fillMonths();
+  /* 默认：华东 + 当月（仅首次进入设置；之后沿用用户选择，跨年份切换也保留月份） */
+  (function(){
+    const keep=monthSel.value;
+    if(keep && monthSel.querySelector('option[value="'+keep+'"]')){ monthSel.value=keep; return; }
+    if(!_weatherInited){
+      if(yearSel.value===CUR_Y && monthSel.querySelector('option[value="'+CUR_M+'"]')) monthSel.value=CUR_M;
+      _weatherInited=true;
+    }
+  })();
+  function draw(){
+    const region=regionSel.value, city=citySel.value, year=yearSel.value, month=monthSel.value, metric=metricSel.value;
+    let rows=W.filter(r=>r.region===region);
+    if(city) rows=rows.filter(r=>r.city===city);
+    if(year) rows=rows.filter(r=>r.date.slice(0,4)===year);
+    if(month) rows=rows.filter(r=>r.date.slice(5,7)===month);
+    rows=rows.slice().sort((a,b)=>a.date<b.date?-1:1);
+    const dates=rows.map(r=>r.date);
+    const mval=rows.map(r=> metric==='temp'?r.temp : metric==='tempHigh'?r.tempHigh : r.tempLow);
+    const mname=metricSel.options[metricSel.selectedIndex].text;
+    const series=[{name:mname, color:'#ff6a00', values:mval}];
+    if(metric==='temp'){
+      series.push({name:'日最高气温', color:'#e23b3b', values:rows.map(r=>r.tempHigh), thin:true});
+      series.push({name:'日最低气温', color:'#2f6bff', values:rows.map(r=>r.tempLow), thin:true});
+    }
+    if(!rows.length){ chart.innerHTML='<div class="muted">该筛选条件下无气温数据</div>'; tbl.innerHTML=''; }
+    else {
+      chart.innerHTML = wxLineChart(dates, series);
+      let html='<table class="dtable"><thead><tr><th>日期</th><th>区域</th><th>城市</th><th>日平均气温</th><th>日最高气温</th><th>日最低气温</th><th>节气</th></tr></thead><tbody>';
+      rows.forEach(r=>{
+        html+=`<tr><td>${r.date}</td><td>${r.region}</td><td>${r.city||'—'}</td><td>${r.temp}</td><td>${r.tempHigh}</td><td>${r.tempLow}</td><td>${r.solarTerm||'—'}</td></tr>`;
+      });
+      tbl.innerHTML=html+'</tbody></table>';
+    }
+    const filled=W.filter(r=>r.region===region && (!city||r.city===city) && r.temp!=null).map(r=>r.date).sort();
+    const lastFilled=filled.length?filled[filled.length-1]:null;
+    hint.textContent=`区域：${region}${city?' · 城市：'+city:''}${year?' · '+year+'年':''}${month?' · '+month+'月':''} · 共 ${rows.length} 天气温记录${rows.length?`（${dates[0]} ~ ${dates[dates.length-1]}）`:''}${lastFilled?` · 已录入气温截至 ${lastFilled}，之后为待填占位`:''}`;
+    renderWxAI(region, city, year, month);
+  }
+  /* 气温建议分档：按「骤变之后的绝对气温」给上新/推广建议，而不是只看升降方向 */
+  function wxAdvice(to, cool){
+    if(cool){
+      if(to<5)  return '骤降后已跌破 <b>5℃（严寒）</b>。<b>上新</b>立刻切羽绒服、加厚棉服、加绒套装等冬季主力款；<b>推广</b>在降温前 1–2 天对重保暖品类集中加预算，素材突出「加绒厚度 / 抗寒实测」。';
+      if(to<12) return '骤降后落在 <b>5–12℃（寒冷）</b>。<b>上新</b>主推棉服、加绒卫衣、厚外套、加厚打底；<b>推广</b>提前 1–2 天给保暖品类提预算，用「换季保暖」场景素材承接需求。';
+      if(to<18) return '骤降后落在 <b>12–18℃（转凉）</b>，尚未入冬。<b>上新</b>以卫衣、夹克、薄外套、长袖套装为主，<u>不必全面切厚款</u>；<b>推广</b>加投春秋过渡款，主打「一件搞定早晚温差」。';
+      if(to<24) return '虽有降温，仍在 <b>18–24℃（舒适）</b>。<b>上新</b>无需切换厚款，可补薄长袖、防晒外套、薄开衫；<b>推广</b>维持现有节奏，小幅加「早晚加件」类素材即可。';
+      return '虽降温明显，气温仍高于 <b>24℃（偏热）</b>。<b>上新</b>继续以夏款为主（短袖、裙装、凉感面料）；<b>推广</b>不必调整品类结构，可借「降温转凉快」话题做一波场景种草。';
+    }
+    if(to<5)  return '虽有回暖，气温仍低于 <b>5℃（严寒）</b>。<b>上新</b>与<b>推广</b>继续以羽绒、加厚棉服为主力，<u>切勿提前切春款</u>，避免压货。';
+    if(to<12) return '回暖后仍在 <b>5–12℃（寒冷）</b>。<b>上新</b>保持厚款为主，可小批量试上薄棉服/夹层外套探需求；<b>推广</b>主力预算仍留给保暖品类。';
+    if(to<18) return '回暖至 <b>12–18℃（换季窗口）</b>。<b>上新</b>可开始铺卫衣、薄外套、长袖春装；<b>推广</b>逐步把预算从厚款切向春秋过渡款，同步清理冬款库存。';
+    if(to<24) return '回暖至 <b>18–24℃（舒适）</b>。<b>上新</b>主推薄长袖、春秋套装、薄开衫；<b>推广</b>加大春装曝光，同步启动冬款尾货促销。';
+    return '气温已升至 <b>24℃ 以上（转热）</b>。<b>上新</b>主推短袖、裙装、防晒、凉感面料等夏款；<b>推广</b>对清爽品类提预算，用「清凉」场景素材引流。';
+  }
+  /* 气温 AI：检测单日均温变动≥5℃的骤变，优先提示「未来即将发生」的（可提前布局），其次回顾幅度最大的 */
+  function renderWxAI(region, city, year, month){
+    let base=W.filter(r=>r.region===region && (!city||r.city===city) && (!year||r.date.slice(0,4)===year) && (!month||String(Number(r.date.slice(5,7)))===String(Number(month))));
+    base=base.slice().sort((a,b)=>a.date<b.date?-1:1).filter(r=>r.temp!=null);
+    const TH=5;
+    const ev=[];
+    for(let i=1;i<base.length;i++){
+      const a=base[i-1].temp, b=base[i].temp;
+      if(a==null||b==null) continue;
+      const d=b-a;
+      if(Math.abs(d)>=TH) ev.push({date:base[i].date, from:a, to:b, delta:d});
+    }
+    const scope=`${region}${city?'·'+city:''}${year?'·'+year+'年':''}${month?'·'+month+'月':''}`;
+    if(!ev.length){
+      alertTitle.style.display='none';
+      alertBox.innerHTML=`<div class="wx-ai-item" style="border-color:#e6ebfb;background:#fbfcff"><span class="wic" style="background:#eaf0ff;color:#2f6bff">✓</span><div class="wtx">所选范围（${scope}）未检测到单日均温变动 ≥5℃ 的明显骤变，气温平稳，暂无需针对气温做特殊上新/推广调整。</div></div>`;
+      return;
+    }
+    alertTitle.style.display='';
+    /* 气温数据实际截止日（之后为空占位），据此判断「刚发生 / 即将发生」 */
+    const lastWx=base[base.length-1].date;
+    const today=(function(){const d=new Date();const p=x=>String(x).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;})();
+    const anchor = lastWx<today ? lastWx : today;
+    const toD=s=>new Date(+s.slice(0,4), +s.slice(5,7)-1, +s.slice(8,10));
+    const dayGap=s=>Math.round((toD(s)-toD(anchor))/86400000);
+    const upcoming=ev.filter(e=>e.date>anchor).sort((a,b)=>a.date<b.date?-1:1);
+    const recent=ev.filter(e=>e.date<=anchor && dayGap(e.date)>=-30).sort((a,b)=>a.date>b.date?-1:1);
+    let top, lead, mode;
+    if(upcoming.length){
+      mode='future'; top=upcoming.slice(0,3);
+      lead=`所选范围（${scope}）共识别 <b>${ev.length}</b> 次明显气温骤变，其中 <b>${upcoming.length}</b> 次<b>尚未发生</b>。以下为即将到来的几次，建议<b style="color:var(--red)">提前锁定上新排期与推广预算</b>：`;
+    } else if(recent.length){
+      mode='recent'; top=recent.slice(0,3);
+      lead=`所选范围（${scope}）共识别 <b>${ev.length}</b> 次明显气温骤变，其中 <b style="color:var(--red)">${recent.length} 次发生在最近 30 天内</b>（气温数据截至 ${lastWx}）。这几次的换季需求<b>正在释放</b>，建议立即响应：`;
+    } else {
+      mode='past'; top=ev.slice().sort((x,y)=>Math.abs(y.delta)-Math.abs(x.delta)).slice(0,3);
+      lead=`所选范围（${scope}）共识别 <b>${ev.length}</b> 次明显气温骤变（单日均温变动≥5℃），最近 30 天内无骤变。以下为幅度最大的几次，可作为<b>下一年同期</b>的上新与推广节奏参考：`;
+    }
+    let html=`<div class="wx-ai-item ${top[0].delta<0?'cool':'warm'}"><span class="wic">${top[0].delta<0?'❄':'🔥'}</span><div class="wtx">${lead}</div></div>`;
+    top.forEach(e=>{
+      const cool=e.delta<0;
+      const gap=dayGap(e.date);
+      let tag;
+      if(gap>0)       tag=`<b style="color:var(--red)">还有 ${gap} 天</b> · `;
+      else if(gap===0)tag=`<b style="color:var(--red)">就在当天</b> · `;
+      else if(gap>=-7)tag=`<b style="color:var(--red)">${-gap} 天前刚发生</b> · `;
+      else            tag=`<span style="color:var(--sub)">${-gap} 天前</span> · `;
+      const act = mode==='recent' && gap>=-7 ? '<b style="color:var(--red)">需求正在释放，建议本周内完成调整。</b>' : '';
+      html+=`<div class="wx-ai-item ${cool?'cool':'warm'}"><span class="wic">${cool?'🌡↓':'🌡↑'}</span><div class="wtx">${tag}<b>${e.date}</b> 出现明显${cool?'降温':'升温'}：日均温 <b>${e.from}℃ → ${e.to}℃</b>（${cool?'↓':'↑'}${Math.abs(e.delta).toFixed(1)}℃）。${wxAdvice(e.to, cool)}${act}</div></div>`;
+    });
+    alertBox.innerHTML=html;
+  }
+  regionSel.onchange=()=>{ fillCities(); fillMonths(); draw(); };
+  citySel.onchange=draw;
+  yearSel.onchange=()=>{ fillMonths(); draw(); };
+  monthSel.onchange=draw;
+  metricSel.onchange=draw;
+  draw();
+}
+
+/* ============ 聚水潭 × 生意参谋 经营洞察模块 ============ */
+let _insightInited=false;
+function renderInsight(){
+  const yearSel=document.getElementById('insYear');
+  const monthSel=document.getElementById('insMonth');
+  const metricSel=document.getElementById('insMetric');
+  const hint=document.getElementById('insHint');
+  const jstKpi=document.getElementById('insJstKpi');
+  const sygcKpi=document.getElementById('insSygcKpi');
+  const chart=document.getElementById('insChart');
+  const skuBody=document.getElementById('insSkuBody');
+  if(!Object.keys(JST_DAY).length && !Object.keys(SYGC_DAY).length){
+    hint.textContent='暂无可用的聚水潭 / 生意参谋数据（请重新运行 sync_feishu.py 同步两张多维表）';
+    jstKpi.innerHTML=''; sygcKpi.innerHTML=''; chart.innerHTML=''; skuBody.innerHTML='';
+    return;
+  }
+  const jYears=[...new Set(Object.keys(JST_DAY).map(d=>d.slice(0,4)))].sort();
+  const sYears=[...new Set(Object.keys(SYGC_DAY).map(d=>d.slice(0,4)))].sort();
+  const years=[...new Set(jYears.concat(sYears))].sort();
+  const CUR_Y=String(new Date().getFullYear());
+  const CUR_M=String(new Date().getMonth()+1).padStart(2,'0');
+  const prevYear=yearSel.value||(years.includes(CUR_Y)?CUR_Y:years[years.length-1]);
+  yearSel.innerHTML=['<option value="">全部年份</option>'].concat(years.map(y=>`<option value="${y}" ${y===prevYear?'selected':''}>${y}年</option>`)).join('');
+  function fillMonths(){
+    const y=yearSel.value;
+    const ms=[...new Set(Object.keys(JST_DAY).concat(Object.keys(SYGC_DAY)).filter(d=>!y||d.slice(0,4)===y).map(d=>Number(d.slice(5,7))))].sort((a,b)=>a-b);
+    const cur=monthSel.value;
+    monthSel.innerHTML='<option value="">全部月份</option>'+ms.map(m=>`<option value="${String(m).padStart(2,'0')}">${m}月</option>`).join('');
+    if(cur && monthSel.querySelector('option[value="'+cur+'"]')) monthSel.value=cur;
+  }
+  fillMonths();
+  (function(){
+    const keep=monthSel.value;
+    if(keep && monthSel.querySelector('option[value="'+keep+'"]')){ monthSel.value=keep; return; }
+    if(!_insightInited){
+      if(yearSel.value===CUR_Y && monthSel.querySelector('option[value="'+CUR_M+'"]')) monthSel.value=CUR_M;
+      _insightInited=true;
+    }
+  })();
+  function draw(){
+    const y=yearSel.value, m=monthSel.value, metric=metricSel.value;
+    let df=null, dt=null;
+    if(y && m){ const r=monthRangeOf(Number(y),Number(m)); df=r[0]; dt=r[1]; }
+    else if(y){ df=y+'-01-01'; dt=y+'-12-31'; }
+    /* 概览聚合 */
+    let jAmt=0,jRet=0,jShip=0,jQty=0,jGmW=0;
+    let sImp=0,sVexp=0,sVis=0,sClk=0,sCartP=0,sPayB=0,sPaidVis=0;
+    for(const d in JST_DAY){ if(df&&d<df)continue; if(dt&&d>dt)continue; const r=JST_DAY[d]; jAmt+=r.amount||0; jRet+=r.retAmt||0; jShip+=r.shipAmt||0; jQty+=r.qty||0; jGmW+=r.gmW||0; }
+    for(const d in SYGC_DAY){ if(df&&d<df)continue; if(dt&&d>dt)continue; const r=SYGC_DAY[d]; sImp+=r.imp||0; sVexp+=r.vexp||0; sVis+=r.visitors||0; sClk+=r.clk||0; sCartP+=r.cartP||0; sPayB+=r.payBuyers||0; sPaidVis+=r.paidVisW||0; }
+    const a={jAmt,jRet,jShip,jQty,jGmW,sImp,sVexp,sVis,sClk,sCartP,sPayB,sPaidVis,
+      refundRate:jShip?jRet/jShip:null, gm:jAmt?jGmW/jAmt:null, price:jQty?jAmt/jQty:null,
+      adCtr:sVexp?sClk/sVexp:null, cartRate:sVis?sCartP/sVis:null, convRate:sVis?sPayB/sVis:null,
+      paidVisitorRatio:sVis?sPaidVis/sVis:null};
+    jstKpi.innerHTML=[
+      ['真实销售额', money(a.jAmt)],
+      ['销量(件)', fmt(a.jQty)],
+      ['成交价', money(a.price)],
+      ['销售毛利率', a.gm==null?'—':(a.gm*100).toFixed(1)+'%'],
+      ['退款率', a.refundRate==null?'—':(a.refundRate*100).toFixed(2)+'%']
+    ].map(([t,v])=>`<div class="kpi"><div class="k">${t}</div><div class="v">${v}</div></div>`).join('');
+    sygcKpi.innerHTML=[
+      ['访客数', fmt(a.sVis)],
+      ['展现量', fmt(a.sImp)],
+      ['广告点击量', fmt(a.sClk)],
+      ['广告点击率', a.adCtr==null?'—':(a.adCtr*100).toFixed(2)+'%'],
+      ['加购率', a.cartRate==null?'—':(a.cartRate*100).toFixed(2)+'%'],
+      ['转化率', a.convRate==null?'—':(a.convRate*100).toFixed(2)+'%']
+    ].map(([t,v])=>`<div class="kpi"><div class="k">${t}</div><div class="v">${v}</div></div>`).join('');
+    /* 趋势 */
+    const seriesMap={
+      jReal:{name:'聚水潭真实销售额', color:'#16a34a', src:'JST', field:'amount', yfmt:money},
+      refundRate:{name:'退款率', color:'#e23b3b', src:'JST', field:'retAmt', denom:'shipAmt', pct:true},
+      gm:{name:'销售毛利率', color:'#d97706', src:'JST', field:'gmW', denom:'amount', pct:true},
+      sVis:{name:'生意参谋访客数', color:'#2f6bff', src:'SYGC', field:'visitors', yfmt:fmt},
+      adCtr:{name:'广告点击率', color:'#7c3aed', src:'SYGC', field:'clk', denom:'vexp', pct:true},
+      cartRate:{name:'加购率', color:'#0891b2', src:'SYGC', field:'cartP', denom:'visitors', pct:true},
+      convRate:{name:'转化率', color:'#db2777', src:'SYGC', field:'payBuyers', denom:'visitors', pct:true}
+    };
+    const cfg=seriesMap[metric];
+    const srcMap=cfg.src==='JST'?JST_DAY:SYGC_DAY;
+    const days=[];
+    for(const d in srcMap){ if(df&&d<df)continue; if(dt&&d>dt)continue; days.push(d); }
+    days.sort();
+    const vals=days.map(d=>{ const r=srcMap[d]; return cfg.denom? (r[cfg.denom]? r[cfg.field]/r[cfg.denom]:0) : (r[cfg.field]||0); });
+    if(!days.length){ chart.innerHTML='<div class="muted">该筛选条件下无数据</div>'; }
+    else {
+      chart.innerHTML=lineChart(days, vals, {color:cfg.color, yfmt: cfg.pct? (v=>(v*100).toFixed(1)+'%') : (cfg.yfmt||fmt)});
+    }
+    hint.textContent=`${y?y+'年':'全部年份'}${m?m+'月':' · 全部月份'} · 聚水潭自 ${jYears[0]||'-'} 起、生意参谋自 ${sYears[0]||'-'} 起（生意参谋 2026 年前无流量数据）`;
+    /* 单品明细：聚水潭全量单品，按所选月或累计，enrich 生意参谋 */
+    const monthKey=(y&&m)?(y+'-'+m):null;
+    const rows=[];
+    for(const sku in JST_SKU){
+      let amt=0,ret=0,ship=0,qty=0,gmW=0,has=false;
+      if(monthKey){ const r=JST_SKU[sku][monthKey]; if(r){ amt=r.amount||0; ret=r.retAmt||0; ship=r.shipAmt||0; qty=r.qty||0; gmW=r.gmW||0; has=(amt||qty||ship); } }
+      else { for(const mk in JST_SKU[sku]){ const r=JST_SKU[sku][mk]; amt+=r.amount||0; ret+=r.retAmt||0; ship+=r.shipAmt||0; qty+=r.qty||0; gmW+=r.gmW||0; } has=(amt||qty); }
+      if(!has) continue;
+      const row={sku, jAmt:amt,jRet:ret,jShip:ship,jQty:qty,jGmW:gmW,
+        refundRate: ship? ret/ship:null, gm: amt? gmW/amt:null, price: qty? amt/qty:null, sVis:0,sClk:0,sVexp:0,sCartP:0,sPayB:0};
+      if(monthKey){ const r=SYGC_SKU[sku]&&SYGC_SKU[sku][monthKey]; if(r){ row.sVis=r.visitors||0; row.sClk=r.clk||0; row.sVexp=r.vexp||0; row.sCartP=r.cartP||0; row.sPayB=r.payBuyers||0; } }
+      else { let v=0,c=0,ve=0,cp=0,pb=0; for(const mk in (SYGC_SKU[sku]||{})){ const r=SYGC_SKU[sku][mk]; v+=r.visitors||0; c+=r.clk||0; ve+=r.vexp||0; cp+=r.cartP||0; pb+=r.payBuyers||0; } row.sVis=v;row.sClk=c;row.sVexp=ve;row.sCartP=cp;row.sPayB=pb; }
+      row.adCtr=row.sVexp?row.sClk/row.sVexp:null;
+      row.cartRate=row.sVis?row.sCartP/row.sVis:null;
+      row.convRate=row.sVis?row.sPayB/row.sVis:null;
+      rows.push(row);
+    }
+    rows.sort((x,y)=>y.jAmt-x.jAmt);
+    const scols=[
+      {t:'款号', v:o=>o.sku},
+      {t:'聚水潭销售额', v:o=>o.jAmt, f:money},
+      {t:'销量(件)', v:o=>o.jQty, f:fmt},
+      {t:'成交价', v:o=>o.price, f:money},
+      {t:'销售毛利率', v:o=>o.gm, f:v=>v==null?'—':(v*100).toFixed(1)+'%'},
+      {t:'退款率', v:o=>o.refundRate, f:v=>v==null?'—':(v*100).toFixed(2)+'%'},
+      {t:'访客数', v:o=>o.sVis, f:fmt},
+      {t:'广告点击率', v:o=>o.adCtr, f:v=>v==null?'—':(v*100).toFixed(2)+'%'},
+      {t:'加购率', v:o=>o.cartRate, f:v=>v==null?'—':(v*100).toFixed(2)+'%'},
+      {t:'转化率', v:o=>o.convRate, f:v=>v==null?'—':(v*100).toFixed(2)+'%'}
+    ];
+    skuBody.innerHTML = rows.length? buildReportTable(scols, rows) : '<div class="muted">该筛选条件下无单品数据</div>';
+  }
+  yearSel.onchange=()=>{ fillMonths(); draw(); };
+  monthSel.onchange=draw;
+  metricSel.onchange=draw;
+  draw();
+}
+
+function renderAll(){
+  renderKPIs();
+  renderTrend();
+  renderPlanChart();
+  renderProdChart();
+  renderTable();
+  renderAI();
+  renderBudget();
+  renderConsume();
+  document.getElementById("rowBadge").textContent = allRows().length+" 条 / 筛选 "+(applyFilter(allRows()).length);
+  document.getElementById("srcBadge").textContent = fromFile? "数据源：data.js(已合并)":(LOCAL.length?"数据源：本地粘贴/上传":"数据源：示例");
+  updateDataAsOf();
+  renderWeatherChip();
+}
+/* ============ 天气 / 周次 提示 ============ */
+function renderWeatherChip(){
+  const el=document.getElementById("weatherChip");
+  const dates=DATA.map(r=>r.date).filter(Boolean).sort();
+  const last=dates[dates.length-1];
+  if(!last){ el.style.display="none"; return; }
+  const c=calOf(last);
+  const parts=[];
+  if(c.temp!=null) parts.push("🌡 "+c.temp+"℃");
+  if(c.weekday) parts.push(c.weekday);
+  if(c.week) parts.push("第"+c.week+"周");
+  if(c.solarTerm) parts.push(c.solarTerm);
+  if(!parts.length){ el.style.display="none"; return; }
+  el.textContent="最新 "+last+" · "+parts.join(" · ");
+  el.style.display="";
+}
+
+/* ============ 数据异常提醒横幅 ============ */
+function renderAnomaly(){
+  const el=document.getElementById("anomalyBanner");
+  const A=window.DASHBOARD_ANOMALY;
+  if(!A || (!A.products_missing_sku && !A.products_missing_img)){ el.style.display="none"; return; }
+  const list=[];
+  if(A.products_missing_sku) list.push(`<b>${A.products_missing_sku}</b> 款商品未能识别到款号`);
+  if(A.products_missing_img) list.push(`<b>${A.products_missing_img}</b> 款商品缺少主图`);
+  const ex=[];
+  if(A.examples_sku && A.examples_sku.length) ex.push("缺款号示例："+A.examples_sku.slice(0,5).join("、"));
+  if(A.examples_img && A.examples_img.length) ex.push("缺主图示例："+A.examples_img.slice(0,5).join("、"));
+  el.innerHTML=`<span class="ab-ic">⚠️</span><div class="ab-tx"><b>数据异常提醒</b>：本次导入的商品数据存在 ${list.join("，")}，可能无法在「按商品」明细中正确归并与展示主图。`
+    + (ex.length?`<div class="ab-list">${ex.join("；")}</div>`:"")
+    + `<div class="ab-list">建议核对后台导出表是否漏填款号/主图，或更新 <code>映射/商品id款号映射.xlsx</code> 后重新运行 ingest.py。</div></div>`;
+  el.style.display="flex";
+}
+
+/* ============ 筛选 UI ============ */
+function refreshPlanOptions(){
+  const plans=[...new Set(dimRows("计划").map(r=>r.plan))].filter(Boolean).sort();
+  const sel=document.getElementById("planFilter");
+  const cur=sel.value;
+  sel.innerHTML='<option value="">全部计划</option>'+plans.map(p=>`<option value="${p}">${p}</option>`).join("");
+  if(plans.includes(cur)) sel.value=cur;
+}
+function syncPlanFilterUI(){ document.getElementById("planFilter").value = state.planFilter; }
+
+/* ============ CSV / 粘贴导入 ============ */
+const ALIAS={
+  date:["日期","统计日期","data_date","date"],
+  plan:["计划名称","计划","一级产品","plan","campaign"],
+  pid:["商品id","商品ID","pid","product_id"],
+  sku:["款号","sku","style","style_no","货号"],
+  title:["商品名称","商品标题","title","product"],
+  imp:["展现量","展现","曝光量","impressions","imp"],
+  clk:["点击量","点击","clicks","clk"],
+  cost:["消耗","花费","消耗量","cost","spend"],
+  ctr:["点击率","点击转化率","ctr"],
+  cpc:["平均点击成本","cpc"],
+  favP:["收藏商品数","fav_p"],
+  favS:["收藏店铺数","fav_s"],
+  cart:["加购数","cart"],
+  coupon:["领券数","获取优惠券数","coupon"],
+  ord:["订单数","广告引导提交订单数","提交订单数","orders","ord"],
+  inq:["询盘数","inquiry","inq"],
+  lead:["线索量","线索数","leads","lead"],
+  gmv:["成交金额","广告引导交易金额","gmv"],
+  roi:["roi","广告投入产出比"]
+};
+function normKey(h){h=(h||"").trim().toLowerCase();
+  for(const k in ALIAS){ if(ALIAS[k].some(a=>a.toLowerCase()===h)) return k; } return null;}
+function parseCSV(text){
+  const lines=text.trim().split(/\r?\n/); if(!lines.length) return [];
+  const head=lines[0].split(",").map(normKey);
+  const out=[];
+  for(let i=1;i<lines.length;i++){
+    if(!lines[i].trim()) continue;
+    const cells=lines[i].split(",");
+    const o={dim:"总览",plan:"全部",pid:"",sku:"",title:"",imp:null,vexp:null,clk:null,cost:null,ctr:null,cpc:null,favP:null,favS:null,cart:null,coupon:null,ord:null,inq:null,lead:null,gmv:null,roi:null,leadCost:null,inqCost:null,leadCvr:null,inqCvr:null};
+    head.forEach((k,ci)=>{ if(k) o[k]=cells[ci]; });
+    if(o.date) o.date=String(o.date).replace(/(\d{4})(\d{2})(\d{2})/,"$1-$2-$3");
+    if(o.plan && o.plan!=="全部") o.dim = (o.pid||o.sku)? "商品":"计划";
+    if(o.pid||o.sku) o.dim="商品";
+    out.push(o);
+  }
+  return out;
+}
+document.getElementById("btnPaste").onclick=()=>{
+  const rows=parseCSV(document.getElementById("pasteArea").value);
+  if(!rows.length){alert("未解析到数据，请检查表头");return;}
+  LOCAL=LOCAL.concat(rows); refreshPlanOptions(); renderBudgetSettings(); populateConsumeSelectors(); renderAll();
+};
+document.getElementById("fileIn").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ const rows=parseCSV(rd.result); if(rows.length){LOCAL=LOCAL.concat(rows); refreshPlanOptions(); renderBudgetSettings(); populateConsumeSelectors(); renderAll(); alert("已导入 "+rows.length+" 条");} };
+  rd.readAsText(f);
+});
+function rowsToCSV(rows, cols){
+  const esc=v=>{ if(v==null) v=""; v=String(v);
+    if(v.includes(",")||v.includes('"')||v.includes("\n")) v='"'+v.replace(/"/g,'""')+'"'; return v; };
+  return cols.join(",")+"\n"+rows.map(r=>cols.map(c=>esc(r[c])).join(",")).join("\n");
+}
+function downloadCSV(filename, csv){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"}));
+  a.download=filename; a.click();
+}
+document.getElementById("btnExport").onclick=()=>{
+  const rows=applyFilter(dimRows(state.grain));
+  const cols=["date","dim","plan","pid","sku","title","imp","clk","cost","ctr","cpc","favP","cart","coupon","ord","inq","lead","gmv","roi"];
+  downloadCSV("1688营销_导出.csv", rowsToCSV(rows, cols));
+};
+document.getElementById("btnReset").onclick=()=>{LOCAL=[];refreshPlanOptions();populateConsumeSelectors();renderAll();};
+
+/* ============ 分部分导出 ============ */
+function exCols(g){
+  if(g==="商品") return ["date","sku","title","imp","clk","cost","ctr","cpc","ord","inq","lead","gmv","roi"];
+  if(g==="计划") return ["date","plan","imp","clk","cost","ctr","cpc","ord","inq","lead"];
+  return ["date","imp","clk","cost","ctr","cpc","favP","cart","coupon","ord","inq","lead"];
+}
+function exportAll(){
+  const rows=applyFilter(allRows());
+  const cols=["date","dim","plan","pid","sku","title","imp","clk","cost","ctr","cpc","favP","cart","coupon","ord","inq","lead","gmv","roi"];
+  downloadCSV("1688营销_全部导出.csv", rowsToCSV(rows, cols));
+}
+function exportSummary(){
+  const g=state.grain;
+  if(g==="总览"){
+    const one=aggregate(applyFilter(dimRows("总览")), ()=>"全部", "总览")[0];
+    const cols=["dim","imp","clk","cost","ctr","cpc","favP","cart","coupon","ord","inq","lead","gmv","roi"];
+    downloadCSV("1688营销_总览汇总.csv", rowsToCSV(one?[one]:[], cols));
+    return;
+  }
+  const keyFn=g==="商品"?(r=>r.sku||r.pid):(r=>r.plan);
+  const rows=aggregate(applyFilter(dimRows(g)), keyFn, g);
+  const cols=g==="商品"?["sku","title","imp","clk","cost","ctr","cpc","ord","inq","lead","gmv","roi"]
+                       :["plan","imp","clk","cost","ctr","cpc","ord","inq","lead"];
+  downloadCSV("1688营销_"+(g==="商品"?"按款号汇总":"按计划汇总")+".csv", rowsToCSV(rows, cols));
+}
+function exportDaily(){
+  const g=state.grain;
+  let rows=applyFilter(dimRows(g));
+  if(state.dailyDate) rows=rows.filter(r=>r.date===state.dailyDate);
+  downloadCSV("1688营销_每日明细_"+g+(state.dailyDate?"_"+state.dailyDate:"")+".csv", rowsToCSV(rows, exCols(g)));
+}
+function exportDailyCost(){
+  let rows=applyFilter(dimRows("总览"));
+  if(state.dailyDate) rows=rows.filter(r=>r.date===state.dailyDate);
+  downloadCSV("1688营销_日消耗数据"+(state.dailyDate?"_"+state.dailyDate:"")+".csv", rowsToCSV(rows, exCols("总览")));
+}
+function exportKpi(){
+  const {row1,row2,row3}=computeKPIs();
+  const all=row1.concat(row2,row3);
+  const rows=all.map(c=>({指标:c.t,数值:String(c.v).replace(/¥|,/g,""),说明:c.d}));
+  const cols=["指标","数值","说明"];
+  downloadCSV("1688营销_KPI.csv", rowsToCSV(rows, cols));
+}
+function exportAi(){
+  if(!_lastAI.length && !_lastActions.length){ alert("暂无 AI 结论/行动项可导出（请先确保筛选范围内有商品数据）"); return; }
+  const rows=_lastAI.map((o,i)=>({序号:i+1,类型:o.cls,内容:o.text}))
+    .concat(_lastActions.map((o,i)=>({序号:"A"+(i+1),类型:"行动-"+o.优先级,内容:o.内容})));
+  const cols=["序号","类型","内容"];
+  downloadCSV("1688营销_AI结论与行动.csv", rowsToCSV(rows, cols));
+}
+document.getElementById("exAll").onclick=exportAll;
+document.getElementById("exSum").onclick=exportSummary;
+document.getElementById("exDaily").onclick=exportDaily;
+document.getElementById("exDailyCost").onclick=exportDailyCost;
+document.getElementById("exKpi").onclick=exportKpi;
+document.getElementById("exAi").onclick=exportAi;
+function exportTarget(){
+  if(!TARGET.length){ alert("未检测到目标表（targets.js）"); return; }
+  const costMap={};
+  allRows().forEach(r=>{ if(r.date){ costMap[r.date]=(costMap[r.date]||0)+(Number(r.cost)||0); } });
+  const rows=TARGET.map(r=>{ const o={...r};
+    if((o.actPromo==null||o.actPromo===0) && costMap[o.date]){ o.actPromo=costMap[o.date]; o.promoMatchRate=o.promoBudget?o.actPromo/o.promoBudget*100:null; }
+    return {
+      日期:o.date, 营销节奏:o.rhythm||"", 目标日销售额:o.estDaySales!=null?o.estDaySales:"", 实际日销售额:o.actSales!=null?o.actSales:"", 日销售额完成率:o.salesRate!=null?o.salesRate+"%":"",
+      目标访客:o.estDayVisitors!=null?o.estDayVisitors:"", 实际访客:o.actVisitors!=null?o.actVisitors:"", 访客完成率:o.visitorRate!=null?o.visitorRate+"%":"",
+      目标转化率:o.estDayConv!=null?pct(o.estDayConv):"", 实际转化率:o.actConv!=null?pct(o.actConv):"", 转化完成率:o.convRate!=null?o.convRate+"%":"",
+      目标客单价:o.estDayAov!=null?o.estDayAov:"", 实际客单价:o.actAov!=null?o.actAov:"", 客单价完成率:o.aovRate!=null?o.aovRate+"%":"",
+      推广预算:o.promoBudget!=null?o.promoBudget:"", 实际推广费:o.actPromo!=null?o.actPromo:"", 预算匹配率:o.promoMatchRate!=null?o.promoMatchRate+"%":""
+    };
+  });
+  const cols=["日期","营销节奏","目标日销售额","实际日销售额","日销售额完成率","目标访客","实际访客","访客完成率","目标转化率","实际转化率","转化完成率","目标客单价","实际客单价","客单价完成率","推广预算","实际推广费","预算匹配率"];
+  downloadCSV("1688营销_目标达成.csv", rowsToCSV(rows, cols));
+}
+document.getElementById("exTarget").onclick=exportTarget;
+
+/* ============ 事件 ============ */
+document.getElementById("trendSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  state.trend=b.dataset.m;
+  document.querySelectorAll("#trendSeg button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); renderTrend();
+});
+document.getElementById("grainSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  state.grain=b.dataset.g;
+  document.querySelectorAll("#grainSeg button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); renderTable();
+});
+/* 计划消耗对比：金额 / 占比 切换 */
+document.getElementById("planViewSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  state.planView=b.dataset.v;
+  document.querySelectorAll("#planViewSeg button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); renderPlanChart();
+});
+/* 推广消耗分析：子页签切换 */
+document.getElementById("consumeSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  state.consumeView=b.dataset.c;
+  document.querySelectorAll("#consumeSeg button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); renderConsume();
+});
+document.getElementById("consDay").addEventListener("change", renderConsStruct);
+document.getElementById("consRankPlan").addEventListener("change", renderConsRank);
+document.getElementById("consItemSel").addEventListener("change", ()=>{ populateConsumeSelectors(); renderConsItem(); });
+document.getElementById("consItemPlan").addEventListener("change", renderConsItem);
+document.getElementById("consItemSearch").addEventListener("input", filterConsItem);
+/* 顶部导航：1688营销 / 目标达成 / 推广周报 / 推广月报 */
+document.querySelectorAll(".topnav button").forEach(b=>b.onclick=()=>{
+  const v=b.dataset.view;
+  if(!v) return;
+  state.view=v;
+  document.querySelectorAll(".topnav button").forEach(x=>x.classList.toggle("on", x===b));
+  document.getElementById("marketingView").style.display = v==="marketing" ? "" : "none";
+  document.getElementById("targetView").style.display = v==="target" ? "" : "none";
+  document.getElementById("weeklyView").style.display = v==="weekly" ? "" : "none";
+  document.getElementById("monthlyView").style.display = v==="monthly" ? "" : "none";
+  document.getElementById("weatherView").style.display = v==="weather" ? "" : "none";
+  document.getElementById("insightView").style.display = v==="insight" ? "" : "none";
+  if(v==="target") renderTarget();
+  else if(v==="weekly") renderWeekly();
+  else if(v==="monthly") renderMonthly();
+  else if(v==="weather") renderWeather();
+  else if(v==="insight") renderInsight();
+  else renderAll();
+});
+
+/* 「数据更新」按钮：本地联动模式下从飞书一键拉最新数据 */
+(function(){
+  const btnSync = document.getElementById('btnSync');
+  const banner = document.getElementById('syncBanner');
+  if(!btnSync) return;
+  // 云端部署时，把下面这串与 server_cloud.js 的 SYNC_TOKEN 环境变量设为相同随机值；
+  // 本地（启动看板.bat）留空即可，server 不校验令牌。
+  const SYNC_TOKEN = "";
+  function syncHeaders(){
+    const h = { 'Content-Type': 'application/json' };
+    if (SYNC_TOKEN) h['x-sync-token'] = SYNC_TOKEN;
+    return h;
+  }
+  function showBanner(html, autoHide=0){
+    if(!banner) return;
+    banner.innerHTML = `<span class="sb-ic">💡</span><div class="sb-tx">${html}</div><button class="sb-close" aria-label="关闭">×</button>`;
+    banner.style.display = 'flex';
+    banner.querySelector('.sb-close').onclick = () => { banner.style.display='none'; };
+    if(autoHide) setTimeout(() => { if(banner) banner.style.display='none'; }, autoHide);
+  }
+  function setBtnState(state, label){
+    btnSync.classList.remove('ready','offline','syncing');
+    if(state) btnSync.classList.add(state);
+    const lbl = btnSync.querySelector('.sync-txt');
+    if(lbl && label) lbl.textContent = label;
+  }
+  async function probe(){
+    // 不按域名判断，直接探测「当前源能否访问 /api/sync」：
+    // 本地 bat / 云服务器 -> 200 -> 就绪；file:// 或纯静态线上链接 -> 失败 -> 离线
+    try {
+      const r = await fetch('/api/sync', { method:'GET', cache:'no-store', headers: syncHeaders() });
+      if(r.ok){ setBtnState('ready','数据更新'); return true; }
+    } catch(e){}
+    setBtnState('offline','同步服务未连接');
+    return false;
+  }
+  // 页面加载后探测一次；如果已经是 localhost，也允许用户随时点击重试
+  probe();
+
+  btnSync.onclick = async () => {
+    if (btnSync.disabled) return;
+    const ready = await probe();
+    if(!ready){
+      showBanner('<b>同步服务未连接</b>：点「数据更新」需要一个能访问飞书的同步后端。' +
+        '本机请双击 <code>启动看板.bat</code> 后使用自动打开的 <code>http://localhost:8787</code>；' +
+        '线上请使用你自建云服务器提供的地址。');
+      return;
+    }
+    const orig = '数据更新';
+    btnSync.disabled = true;
+    setBtnState('syncing','同步中…');
+    try {
+      const resp = await fetch('/api/sync', { method: 'POST', headers: syncHeaders() });
+      let data = {};
+      try { data = await resp.json(); } catch(e) {}
+      if (resp.ok && data.ok) {
+        showBanner('<b>✅ 同步成功</b>：已从飞书多维表拉取最新数据，页面即将自动刷新…', 4000);
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        setBtnState('ready', orig); btnSync.disabled = false;
+        showBanner('<b>同步未成功</b>：' + (data.msg || ('HTTP ' + resp.status)) +
+          (data.log ? '<br><code>' + String(data.log).slice(0,400).replace(/\n/g,'<br>') + '</code>' : ''));
+      }
+    } catch (e) {
+      setBtnState('ready', orig); btnSync.disabled = false;
+      showBanner('<b>同步请求失败</b>：' + e.message + '。请确认同步服务仍在运行（本机 <code>启动看板.bat</code> 窗口未关闭，或云服务器进程存活）。');
+    }
+  };
+})();
+document.getElementById('exWeekly').onclick=()=>exportReportCSV('weeklyBody','推广周报.csv');
+document.getElementById('exMonthly').onclick=()=>exportReportCSV('monthlyBody','推广月报_汇总.csv');
+/* 日期/计划筛选先写入 pending，点「筛选确认」才生效 */
+["dateFrom","dateTo"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",e=>{ pending[id]=e.target.value; });
+});
+document.getElementById("planFilter").addEventListener("change",e=>{ pending.planFilter=e.target.value; });
+document.getElementById("btnApply").onclick=()=>{
+  state.dateFrom=pending.dateFrom; state.dateTo=pending.dateTo; state.planFilter=pending.planFilter;
+  renderAll();
+};
+document.getElementById("btnClear").onclick=()=>{
+  state.dateFrom=""; state.dateTo=""; state.planFilter="";
+  pending.dateFrom=""; pending.dateTo=""; pending.planFilter="";
+  document.getElementById("dateFrom").value=""; document.getElementById("dateTo").value="";
+  document.getElementById("planFilter").value="";
+  renderAll();
+};
+document.getElementById("dailyDate").addEventListener("change",e=>{ state.dailyDate=e.target.value; renderTable(); });
+/* 快捷日期区间 + 趋势图点击单日选择 */
+function applyRange(from,to){
+  state.dateFrom=from||""; state.dateTo=to||"";
+  pending.dateFrom=from||""; pending.dateTo=to||"";
+  document.getElementById("dateFrom").value=from||"";
+  document.getElementById("dateTo").value=to||"";
+  document.querySelectorAll(".quick-range .qr").forEach(x=>x.classList.remove("on"));
+  renderAll();
+}
+function setSingleDate(d){
+  applyRange(d,d);
+  const hint=document.getElementById("qrHint");
+  if(hint) hint.textContent="已选中单日："+d+"（点「全部」或再次点击解除）";
+}
+function clearQR(){
+  state.dateFrom=""; state.dateTo="";
+  pending.dateFrom=""; pending.dateTo="";
+  document.getElementById("dateFrom").value=""; document.getElementById("dateTo").value="";
+  document.querySelectorAll(".quick-range .qr").forEach(x=>x.classList.remove("on"));
+  renderAll();
+}
+document.querySelectorAll(".quick-range .qr").forEach(b=>b.onclick=()=>{
+  const r=b.dataset.r;
+  if(r==="all"){ clearQR(); const h=document.getElementById("qrHint"); if(h) h.textContent=""; return; }
+  const lr=latestRealDate();
+  const pad=n=>String(n).padStart(2,"0");
+  if(!lr){ const h=document.getElementById("qrHint"); if(h) h.textContent="暂无可用数据"; return; }
+  if(r==="today"){            // 实为“昨天”：取最近有真实数据的日期
+    setSingleDate(lr);
+    const h=document.getElementById("qrHint"); if(h) h.textContent="已选中最新数据日："+lr+"（数据一般当天未更新，已自动取最近有数据的日期）";
+  }
+  else if(r==="7"){
+    const ds=realDataDates();
+    const start=ds[Math.max(0,ds.length-7)];
+    applyRange(start,lr);
+    const h=document.getElementById("qrHint");
+    const n=ds.length<7?ds.length:7;
+    if(h) h.textContent="已筛选近 "+n+" 个有数据日（"+start+" ~ "+lr+"），数据覆盖区间见图表";
+  } else if(r==="month"){
+    const [df,dt]=currentMonthRange(); applyRange(df,dt);
+    const h=document.getElementById("qrHint"); if(h) h.textContent="已筛选本月（"+df+" ~ "+dt+"）";
+  }
+  b.classList.add("on");
+});
+/* 预算月份切换：加载该月已存计划 */
+function populateBudgetMonth(){
+  const ysel=document.getElementById("budgetYear"), msel=document.getElementById("budgetMonth");
+  const cy=state.budgetYear, cm=state.budgetMonth;
+  ysel.innerHTML=[cy-1,cy,cy+1].map(y=>`<option value="${y}" ${y===cy?'selected':''}>${y}年</option>`).join("");
+  msel.innerHTML=[...Array(12)].map((_,i)=>`<option value="${i+1}" ${i+1===cm?'selected':''}>${i+1}月</option>`).join("");
+}
+function onBudgetMonthChange(){
+  state.budgetYear=Number(document.getElementById("budgetYear").value);
+  state.budgetMonth=Number(document.getElementById("budgetMonth").value);
+  loadBudget(); renderBudgetSettings(); renderBudget();
+}
+document.getElementById("budgetYear").addEventListener("change",onBudgetMonthChange);
+document.getElementById("budgetMonth").addEventListener("change",onBudgetMonthChange);
+document.getElementById("btnBudgetOk").onclick=()=>{
+  saveBudgets(); renderBudget(); renderAI();
+  const hint=document.getElementById("budgetHint");
+  if(hint){ hint.textContent="✓ 已保存到本浏览器（"+bmKey(state.budgetYear,state.budgetMonth)+"）"; setTimeout(()=>{ hint.textContent=""; }, 2400); }
+};
+/* 预算配置导出 / 导入（永久保存方案） */
+function exportBudgetConfig(){
+  const cfg={total:budgetTotal(), plans:state.planBudgets||{}};
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(cfg,null,2)],{type:"application/json"}));
+  a.download="budget.json"; a.click();
+}
+document.getElementById("btnBudgetExport").onclick=exportBudgetConfig;
+document.getElementById("btnBudgetImport").onclick=()=>document.getElementById("budgetFile").click();
+document.getElementById("budgetFile").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{
+    const o=JSON.parse(rd.result);
+    let pb=o.plans||{};
+    if(pb["解决方案"]!==undefined){ if(!pb["大客方案"]) pb["大客方案"]=pb["解决方案"]; delete pb["解决方案"]; }
+    state.planBudgets=pb;
+    saveBudgets(); renderBudgetSettings(); renderBudget(); renderAI();
+    const hint=document.getElementById("budgetHint");
+    if(hint){ hint.textContent="✓ 已导入预算配置（"+bmKey(state.budgetYear,state.budgetMonth)+"）"; setTimeout(()=>{ hint.textContent=""; }, 2200); }
+  }catch(err){ alert("预算配置文件解析失败："+err.message); } };
+  rd.readAsText(f); e.target.value="";
+});
+
+/* ============ 初始化 ============ */
+function currentMonthRange(){
+  const d=new Date(), y=d.getFullYear(), m=d.getMonth();
+  const pad=n=>String(n).padStart(2,"0");
+  const first=new Date(y,m,1), last=new Date(y,m+1,0);
+  return [ `${y}-${pad(first.getMonth()+1)}-${pad(first.getDate())}`,
+           `${y}-${pad(last.getMonth()+1)}-${pad(last.getDate())}` ];
+}
+const _now=new Date();
+state.budgetYear=_now.getFullYear(); state.budgetMonth=_now.getMonth()+1;
+loadBudget();
+populateBudgetMonth();
+refreshPlanOptions();
+const [df,dt]=currentMonthRange();
+state.dateFrom=df; state.dateTo=dt;
+pending.dateFrom=df; pending.dateTo=dt;
+document.getElementById("dateFrom").value=df;
+document.getElementById("dateTo").value=dt;
+renderBudgetSettings();
+populateConsumeSelectors();
+renderAll();
+renderAnomaly();
+</script>
+</body>
+</html>

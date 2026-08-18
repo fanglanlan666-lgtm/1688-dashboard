@@ -49,7 +49,7 @@ HEADER_MAP = {
     "商品ID": "pid", "商品标题": "title",
 }
 CANON = ["date","dim","plan","pid","title","sku","img","imp","vexp","clk","cost","ctr","cpc",
-         "favP","favS","cart","coupon","ord","ordAd","inq","lead","gmv","roi",
+         "favP","favS","cart","coupon","ord","ordAd","inq","lead","gmv","roi","deal",
          "leadCost","inqCost","leadCvr","inqCvr"]
 
 # 计划名称归一化（业务口径：计划维度的「解决方案」即商品维度的「大客方案」）

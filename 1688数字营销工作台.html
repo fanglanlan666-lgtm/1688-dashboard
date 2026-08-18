@@ -395,7 +395,8 @@
       </span>
       <span class="daily-date">
         <label>按日期</label>
-        <select id="dailyDate"><option value="">全部</option></select>
+        <span class="daily-date"><label>开始</label><input type="date" id="detailFrom"><label>结束</label><input type="date" id="detailTo"></span>
+        <span class="daily-pid"><label>款号/商品ID</label><input type="text" id="detailPid" placeholder="输入款号或商品ID"></span>
       </span>
       <span class="export-bar">
         <button class="btn" id="exAll">导出全部</button>
@@ -659,7 +660,7 @@ function allRows(){ return DATA.concat(LOCAL); }
 /* ============ 状态 ============ */
 const state = {
   dateFrom:"", dateTo:"", planFilter:"", budgetYear:0, budgetMonth:0, planBudgets:{},
-  grain:"商品", trend:"cost", dailyDate:"", expanded:{}, view:"marketing", planView:"amount", consumeView:"struct",
+  grain:"商品", trend:"cost", detailFrom:"", detailTo:"", detailPid:"", expanded:{}, view:"marketing", planView:"amount", consumeView:"struct",
   sortKey2:{ overview:{key:"date",dir:1}, plan:{key:"cost",dir:-1}, prod:{key:"cost",dir:-1}, daily:{key:"date",dir:1} }
 };
 const pendingBudget = { planBudgets:{} };
@@ -1005,32 +1006,45 @@ function renderBudget(){
         `<div class="progress-txt">${p}：已消耗 <b>${money(pc)}</b> / ${money(pb)}（<b>${(pc/pb*100).toFixed(1)}%</b>${over?'，<span class="up">超支 '+money(pc-pb)+'</span>':'，剩余 '+money(pb-pc)}）</div></div>`;
     });
   }
-  /* —— 预算执行 AI：按当前日均消耗估算还能撑几天 —— */
+  /* —— 预算执行 AI：结合消耗趋势估算还能撑几天 —— */
   if(tb>0){
     const dataDates=[...new Set(rows.map(r=>r.date))].filter(Boolean).sort();
     const latest=dataDates.length?dataDates[dataDates.length-1]:null;
     const daysElapsed=dataDates.length;
     if(latest && daysElapsed>0){
-      const avg=totalCost/daysElapsed;
+      const dailyCost=dataDates.map(d=> sum(rows.filter(r=>r.date===d),"cost"));
+      const avg=totalCost/daysElapsed; // 整体日均
+      const r3=dailyCost.slice(-3), r7=dailyCost.slice(-7);
+      const avg3=r3.length? r3.reduce((a,b)=>a+b,0)/r3.length : avg;
+      const avg7=r7.length? r7.reduce((a,b)=>a+b,0)/r7.length : avg;
+      // 趋势：近7日日均 对比 整体日均
+      const trendRatio = avg>0 ? avg7/avg : 1;
+      let trendTxt, trendColor;
+      if(trendRatio>=1.15){ trendTxt="消耗呈<b style='color:#e5484d'>上升趋势</b>"; trendColor="#e5484d"; }
+      else if(trendRatio<=0.85){ trendTxt="消耗呈<b style='color:#2f9e44'>下降趋势</b>"; trendColor="#2f9e44"; }
+      else { trendTxt="消耗<b style='color:#868e96'>基本平稳</b>"; trendColor="#868e96"; }
+      const recentAvg=avg7; // 用近7日日均做预测更贴近当前节奏
       const remain=tb-totalCost;
       const lastDay=new Date(state.budgetYear,state.budgetMonth,0).getDate();
       const ld=Number(latest.split('-')[2]);
       const daysLeftMonth=lastDay-ld; // 本月剩余天数（不含 latest 当天）
+      const trendNote=`整体日均 ${money(avg)}，近3日 ${money(avg3)}，近7日 ${money(avg7)} → ${trendTxt}`;
       if(remain<=0){
         const overAmt=totalCost-tb;
-        html+=`<div class="budget-ai alert"><span class="bi-ic">⚠️</span><div>已<b>超支 ${money(overAmt)}</b>（消耗 ${money(totalCost)} / 预算 ${money(tb)}）。请追加预算或收缩低效计划/款号投放，避免后续断量。</div></div>`;
+        html+=`<div class="budget-ai alert"><span class="bi-ic">⚠️</span><div>已<b>超支 ${money(overAmt)}</b>（消耗 ${money(totalCost)} / 预算 ${money(tb)}）。${trendTxt}，请尽快追加预算或收缩低效计划/款号投放，避免后续断量。</div></div>`;
       } else {
-        const canDays= avg>0 ? Math.floor(remain/avg) : Infinity;
+        const canDays= recentAvg>0 ? Math.floor(remain/recentAvg) : Infinity;
         const runout= isFinite(canDays)? addDaysStr(latest,canDays) : "—";
         const monthEnd=addDaysStr(latest,daysLeftMonth);
         if(canDays<daysLeftMonth){
-          const shortfall=Math.max(0, avg*daysLeftMonth - remain);
+          const shortfall=Math.max(0, recentAvg*daysLeftMonth - remain);
           html+=`<div class="budget-ai alert"><span class="bi-ic">⚠️</span><div>`+
-            `<div class="big">预算告急：按当前日均消耗 ${money(avg)}/天，剩余 ${money(remain)} 仅可支撑约 ${canDays} 天</div>`+
+            `<div class="big">预算告急：按近7日日均 ${money(recentAvg)}/天，剩余 ${money(remain)} 仅可支撑约 ${canDays} 天</div>`+
+            `<div style="margin-top:4px">${trendNote}</div>`+
             `预计 <b>${runout}</b> 起预算耗尽，但本月还剩 <b>${daysLeftMonth}</b> 天（至 ${monthEnd}）。`+
-            `建议尽快<b>追加约 ${money(shortfall)}</b>（= 日均 ${money(avg)} × ${daysLeftMonth} 天 − 剩余 ${money(remain)}），以免下旬断量影响上新与推广节奏。</div></div>`;
+            `建议尽快<b>追加约 ${money(shortfall)}</b>（= 近7日日均 ${money(recentAvg)} × ${daysLeftMonth} 天 − 剩余 ${money(remain)}），以免下旬断量影响上新与推广节奏。</div></div>`;
         } else {
-          html+=`<div class="budget-ai ok"><span class="bi-ic">✓</span><div>预算充足：剩余 ${money(remain)} 按日均 ${money(avg)}/天可支撑约 <b>${canDays}</b> 天，覆盖全月（剩 ${daysLeftMonth} 天）无压力。</div></div>`;
+          html+=`<div class="budget-ai ok"><span class="bi-ic">✓</span><div>预算充足：剩余 ${money(remain)} 按近7日日均 ${money(recentAvg)}/天可支撑约 <b>${canDays}</b> 天，覆盖全月（剩 ${daysLeftMonth} 天）无压力。${trendNote}</div></div>`;
         }
       }
     }
@@ -1155,18 +1169,18 @@ const COLS = {
     {k:"lead",t:"线索",f:fmt}
   ],
   "商品":[
-    {k:"img",t:"主图",img:true},{k:"sku",t:"款号"},{k:"title",t:"商品标题"},{k:"imp",t:"展现",f:fmt},{k:"clk",t:"点击",f:fmt},{k:"cost",t:"消耗",f:money},
+    {k:"img",t:"主图",img:true},{k:"sku",t:"款号"},{k:"pid",t:"商品ID"},{k:"imp",t:"展现",f:fmt},{k:"clk",t:"点击",f:fmt},{k:"cost",t:"消耗",f:money},
     {k:"ctr",t:"点击率",f:pct},{k:"cpc",t:"CPC",f:money},{k:"ord",t:"订单",f:fmt},{k:"inq",t:"询盘",f:fmt},
-    {k:"lead",t:"线索",f:fmt},{k:"gmv",t:"成交金额",f:money},{k:"roi",t:"ROI",f:v=>v==null?"—":v.toFixed(2),roi:true}
+    {k:"lead",t:"线索",f:fmt},{k:"gmv",t:"成交金额",f:money},{k:"roi",t:"ROI",f:v=>v==null?"—":v.toFixed(2),roi:true},{k:"deal",t:"成交笔数",f:fmt},{k:"ai",t:"AI分析结论"}
   ]
 };
 const COLS_DAILY = {
   "总览": COLS["总览"],
   "计划":[{k:"date",t:"日期"},{k:"plan",t:"计划"},{k:"imp",t:"展现",f:fmt},{k:"clk",t:"点击",f:fmt},{k:"cost",t:"消耗",f:money},
     {k:"ctr",t:"点击率",f:pct},{k:"cpc",t:"CPC",f:money},{k:"ord",t:"订单",f:fmt},{k:"inq",t:"询盘",f:fmt},{k:"lead",t:"线索",f:fmt}],
-  "商品":[{k:"date",t:"日期"},{k:"img",t:"主图",img:true},{k:"sku",t:"款号"},{k:"title",t:"商品标题"},{k:"imp",t:"展现",f:fmt},{k:"clk",t:"点击",f:fmt},{k:"cost",t:"消耗",f:money},
+  "商品":[{k:"date",t:"日期"},{k:"img",t:"主图",img:true},{k:"sku",t:"款号"},{k:"pid",t:"商品ID"},{k:"imp",t:"展现",f:fmt},{k:"clk",t:"点击",f:fmt},{k:"cost",t:"消耗",f:money},
     {k:"ctr",t:"点击率",f:pct},{k:"cpc",t:"CPC",f:money},{k:"ord",t:"订单",f:fmt},{k:"inq",t:"询盘",f:fmt},
-    {k:"lead",t:"线索",f:fmt},{k:"gmv",t:"成交金额",f:money},{k:"roi",t:"ROI",f:v=>v==null?"—":v.toFixed(2),roi:true}]
+    {k:"lead",t:"线索",f:fmt},{k:"gmv",t:"成交金额",f:money},{k:"roi",t:"ROI",f:v=>v==null?"—":v.toFixed(2),roi:true},{k:"deal",t:"成交笔数",f:fmt},{k:"ai",t:"AI分析结论"}]
 };
 /* 分组汇总表的可排序指标 */
 const SORT_OPTS = {
@@ -1188,6 +1202,7 @@ function cellHTML(r,c){
   const v=r[c.k];
   if(c.img) return r.img? `<td><img class="thumb" src="${r.img}" loading="lazy" onerror="this.style.display='none'"></td>` : `<td>—</td>`;
   if(c.roi) return `<td>${roiTag(v)}</td>`;
+  if(c.k==="ai") return `<td class="ai-cell">${v==null||v===""?"—":v}</td>`;
   if(c.k==="title") return `<td class="title-cell">${v==null||v===""?"—":v}</td>`;
   if(v==null||v==="") return `<td>—</td>`;
   return `<td>${c.f?c.f(v):v}</td>`;
@@ -1198,9 +1213,9 @@ function aggregate(rows, keyFn, dim){
   rows.forEach(r=>{
     const k=keyFn(r);
     if(!m.has(k)) m.set(k,{_key:k,dim:dim,plan:"",pid:"",sku:"",title:"",img:"",
-      imp:0,vexp:0,clk:0,cost:0,favP:0,favS:0,cart:0,coupon:0,ord:0,inq:0,lead:0,gmv:0});
+      imp:0,vexp:0,clk:0,cost:0,favP:0,favS:0,cart:0,coupon:0,ord:0,inq:0,lead:0,gmv:0,deal:0});
     const o=m.get(k);
-    ["imp","vexp","clk","cost","favP","favS","cart","coupon","ord","inq","lead","gmv"].forEach(f=> o[f]+= Number(r[f])||0);
+    ["imp","vexp","clk","cost","favP","favS","cart","coupon","ord","inq","lead","gmv","deal"].forEach(f=> o[f]+= Number(r[f])||0);
     o.plan=o.plan||r.plan||""; o.pid=o.pid||r.pid||""; o.sku=o.sku||r.sku||"";
     o.title=o.title||r.title||""; o.img=o.img||r.img||"";
   });
@@ -1239,17 +1254,22 @@ function renderTableInto(el, rows, cols, which){
 function renderTable(){
   const wrap=document.getElementById("detailWrap");
   const g=state.grain;
-  const dd=state.dailyDate;
+  const df=state.detailFrom, dt=state.detailTo, dp=(state.detailPid||"").trim().toLowerCase();
+  const filtering = df||dt||dp;
   if(g==="总览"){
     let rows=applyFilter(dimRows("总览"));
-    if(dd) rows=rows.filter(r=>r.date===dd);
-    wrap.innerHTML=`<div class="sub-title">每日数据 <span class="cnt">${rows.length} 条${dd?" · 仅 "+dd:""}</span></div><div id="ovBody"></div>`;
+    if(df) rows=rows.filter(r=>r.date>=df);
+    if(dt) rows=rows.filter(r=>r.date<=dt);
+    wrap.innerHTML=`<div class="sub-title">每日数据 <span class="cnt">${rows.length} 条${filtering?" · "+df+(dt?"~"+dt:"起"):""}</span></div><div id="ovBody"></div>`;
     renderTableInto(document.getElementById("ovBody"), rows, COLS["总览"], "overview");
     document.getElementById("tblTip").textContent="";
-    refreshDailyDate();
+    refreshDetailFilter();
     return;
   }
-  const rows=applyFilter(dimRows(g));
+  let rows=applyFilter(dimRows(g));
+  if(df) rows=rows.filter(r=>r.date>=df);
+  if(dt) rows=rows.filter(r=>r.date<=dt);
+  if(dp && g==="商品") rows=rows.filter(r=> (r.pid||"").toLowerCase().includes(dp) || (r.sku||"").toLowerCase().includes(dp));
   const keyFn = g==="商品" ? (r=> r.sku||r.pid||r.title||"未命名") : (r=> r.plan);
   const sumRows=aggregate(rows, keyFn, g);
   const cols=COLS_DAILY[g];
@@ -1264,8 +1284,12 @@ function renderTable(){
   const dailyMap=new Map();
   rows.forEach(r=>{ const kk=keyFn(r); if(!dailyMap.has(kk)) dailyMap.set(kk,[]); dailyMap.get(kk).push(r); });
   dailyMap.forEach(arr=>arr.sort((a,b)=> a.date<b.date?-1:1));
+  // 为每个款式生成 AI 分析结论（仅商品维度、有消耗）
+  if(g==="商品"){
+    sortedSum.forEach(o=>{ o.ai = (Number(o.cost)>0) ? styleAI(o, dailyMap.get(o._key)||[]) : "无消耗"; });
+  }
   const allKeys=sortedSum.map(o=>o._key);
-  const expSet = dd ? new Set(allKeys) : (state.expanded||{});
+  const expSet = filtering ? new Set(allKeys) : (state.expanded||{});
   const label = g==="商品" ? "按款号分组" : "按计划分组";
   const allOpen = allKeys.length>0 && allKeys.every(k=>(state.expanded||{})[k]);
   const sortBtns = SORT_OPTS[g].map(o=>{
@@ -1273,21 +1297,21 @@ function renderTable(){
     const ar= on ? (state.sortKey2[which].dir<0?" ↓":" ↑") : "";
     return `<button data-sort="${o.k}" class="${on?'on':''}">${o.t}${ar}</button>`;
   }).join("");
-  let html=`<div class="sub-title">${label} <span class="cnt">${sortedSum.length} 组${dd?" · 仅 "+dd:""}</span>`+
+  let html=`<div class="sub-title">${label} <span class="cnt">${sortedSum.length} 组${filtering?" · "+df+(dt?"~"+dt:"起"):""}</span>`+
            `<span class="tip" style="margin:0 0 0 8px">点击款号/计划行首箭头展开每日明细，或点「展开全部」平铺查看</span>`+
            `<span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">`+
-           `<button class="btn mini" data-toggle="expand">${dd?"—":(allOpen?"收起全部":"展开全部")}</button>`+
+           `<button class="btn mini" data-toggle="expand">${(filtering)?"—":(allOpen?"收起全部":"展开全部")}</button>`+
            `<span class="tip" style="margin:0">排序</span>`+
            `<span class="seg mini">${sortBtns}</span></span></div>`;
   html+=`<div class="dtable-wrap"><table class="dtable"><thead><tr><th class="grp-col"></th>`+
         cols.map(c=>`<th data-k="${c.k}">${c.t}</th>`).join("")+`</tr></thead><tbody>`;
   sortedSum.forEach(o=>{
-    const open = dd ? true : !!expSet[o._key];
+    const open = filtering ? true : !!expSet[o._key];
     html+=`<tr class="grp-row" data-key="${encodeURIComponent(o._key)}"><td class="grp-col"><span class="tw">${open?'▾':'▸'}</span></td>`;
     html+=cols.map(c=> c.k==="date" ? `<td>汇总</td>` : cellHTML(o,c)).join("");
     html+=`</tr>`;
     if(open){
-      const dr = dd ? (dailyMap.get(o._key)||[]).filter(r=>r.date===dd) : (dailyMap.get(o._key)||[]);
+      const dr = dailyMap.get(o._key)||[];
       dr.forEach(r=>{
         html+=`<tr class="sub-row" data-key="${encodeURIComponent(o._key)}"><td class="grp-col"></td>`;
         html+=cols.map(c=> cellHTML(r,c)).join("");
@@ -1298,7 +1322,7 @@ function renderTable(){
   html+=`</tbody></table></div>`;
   wrap.innerHTML=html;
   wrap.querySelectorAll(".grp-row").forEach(tr=>tr.onclick=()=>{
-    if(dd) return;
+    if(filtering) return;
     const key=decodeURIComponent(tr.dataset.key);
     state.expanded=state.expanded||{};
     state.expanded[key]=!state.expanded[key];
@@ -1319,27 +1343,51 @@ function renderTable(){
     renderTable();
   });
   wrap.querySelectorAll("button[data-toggle='expand']").forEach(b=>b.onclick=()=>{
-    if(dd) return;
+    if(filtering) return;
     const ao = allKeys.length>0 && allKeys.every(k=>(state.expanded||{})[k]);
     state.expanded = state.expanded||{};
     if(ao){ state.expanded={}; } else { allKeys.forEach(k=>state.expanded[k]=true); }
     renderTable();
   });
   document.getElementById("tblTip").textContent = g==="商品"
-    ? "（ROI≥2绿 / 1–2橙 / <1红；汇总行为周期内合计，点击款号行首箭头展开每日明细；可用上方「按日期」筛选单日）"
-    : "（汇总行为周期内合计，点击计划行首箭头展开每日明细；可用上方「按日期」筛选单日）";
-  refreshDailyDate();
+    ? "（ROI≥2绿 / 1–2橙 / <1红；可用上方日期范围/款号筛选；汇总行为周期内合计，点击款号行首箭头展开每日明细）"
+    : "（汇总行为周期内合计，点击计划行首箭头展开每日明细；可用上方日期范围筛选）";
+  refreshDetailFilter();
 }
-function refreshDailyDate(){
-  const sel=document.getElementById("dailyDate");
-  if(!sel) return;
-  const dates=[...new Set(applyFilter(allRows()).map(r=>r.date))].filter(Boolean).sort().reverse();
-  const cur=state.dailyDate;
-  sel.innerHTML='<option value="">全部</option>'+dates.map(d=>`<option value="${d}">${d}</option>`).join("");
-  if(dates.includes(cur)) sel.value=cur; else { sel.value=""; state.dailyDate=""; }
+function refreshDetailFilter(){
+  // 日期范围(原生 date input)与款号输入框即时生效，无需重建选项
 }
 
 /* ============ AI 分析结论 ============ */
+function styleAI(o, daily){
+  const cost=Number(o.cost)||0;
+  if(cost<=0) return "无消耗";
+  const parts=[];
+  if(cost>=1000) parts.push(`消耗较高(${money(cost)})`);
+  else if(cost>=200) parts.push(`消耗中等(${money(cost)})`);
+  else parts.push(`消耗较低(${money(cost)})`);
+  if(o.roi!=null && !isNaN(o.roi)){
+    if(o.roi>=2) parts.push("投产优秀(ROI≥2)");
+    else if(o.roi>=1) parts.push("投产尚可(ROI 1-2)");
+    else parts.push("投产偏低(ROI<1)");
+  }
+  if(o.deal){ const rate=o.clk?o.deal/o.clk*100:null; parts.push(`成交${o.deal}笔${rate!=null?`(点击成交率${rate.toFixed(1)}%)`:""}`); }
+  if(o.leadCost!=null) parts.push(`线索成本${money(o.leadCost)}`);
+  if(o.inqCost!=null) parts.push(`询盘成本${money(o.inqCost)}`);
+  if(daily && daily.length>=2){
+    const sorted=[...daily].sort((a,b)=>a.date<b.date?-1:1);
+    const half=Math.max(1,Math.floor(sorted.length/2));
+    const early=sorted.slice(0,half), late=sorted.slice(half);
+    const eAvg=early.reduce((s,r)=>s+(Number(r.cost)||0),0)/early.length;
+    const lAvg=late.reduce((s,r)=>s+(Number(r.cost)||0),0)/late.length;
+    if(eAvg>0){
+      const ratio=lAvg/eAvg;
+      if(ratio>=1.3) parts.push(`消耗上升趋势(后期较前期+${((ratio-1)*100).toFixed(0)}%)`);
+      else if(ratio<=0.7) parts.push(`消耗下降趋势(后期较前期${((ratio-1)*100).toFixed(0)}%)`);
+    }
+  }
+  return parts.join("；");
+}
 let _lastAI=[], _lastActions=[];
 function renderAI(){
   const dtFrom=state.dateFrom, dtTo=state.dateTo;
@@ -2454,7 +2502,7 @@ document.getElementById("btnReset").onclick=()=>{LOCAL=[];refreshPlanOptions();p
 
 /* ============ 分部分导出 ============ */
 function exCols(g){
-  if(g==="商品") return ["date","sku","title","imp","clk","cost","ctr","cpc","ord","inq","lead","gmv","roi"];
+  if(g==="商品") return ["date","sku","pid","imp","clk","cost","ctr","cpc","ord","inq","lead","gmv","roi","deal"];
   if(g==="计划") return ["date","plan","imp","clk","cost","ctr","cpc","ord","inq","lead"];
   return ["date","imp","clk","cost","ctr","cpc","favP","cart","coupon","ord","inq","lead"];
 }
@@ -2480,13 +2528,18 @@ function exportSummary(){
 function exportDaily(){
   const g=state.grain;
   let rows=applyFilter(dimRows(g));
-  if(state.dailyDate) rows=rows.filter(r=>r.date===state.dailyDate);
-  downloadCSV("1688营销_每日明细_"+g+(state.dailyDate?"_"+state.dailyDate:"")+".csv", rowsToCSV(rows, exCols(g)));
+  if(state.detailFrom) rows=rows.filter(r=>r.date>=state.detailFrom);
+  if(state.detailTo) rows=rows.filter(r=>r.date<=state.detailTo);
+  if(state.detailPid && g==="商品"){ const dp=state.detailPid.trim().toLowerCase(); rows=rows.filter(r=>(r.pid||"").toLowerCase().includes(dp)||(r.sku||"").toLowerCase().includes(dp)); }
+  const suf=(state.detailFrom||state.detailTo)?("_"+state.detailFrom+"~"+state.detailTo):"";
+  downloadCSV("1688营销_每日明细_"+g+suf+".csv", rowsToCSV(rows, exCols(g)));
 }
 function exportDailyCost(){
   let rows=applyFilter(dimRows("总览"));
-  if(state.dailyDate) rows=rows.filter(r=>r.date===state.dailyDate);
-  downloadCSV("1688营销_日消耗数据"+(state.dailyDate?"_"+state.dailyDate:"")+".csv", rowsToCSV(rows, exCols("总览")));
+  if(state.detailFrom) rows=rows.filter(r=>r.date>=state.detailFrom);
+  if(state.detailTo) rows=rows.filter(r=>r.date<=state.detailTo);
+  const suf=(state.detailFrom||state.detailTo)?("_"+state.detailFrom+"~"+state.detailTo):"";
+  downloadCSV("1688营销_日消耗数据"+suf+".csv", rowsToCSV(rows, exCols("总览")));
 }
 function exportKpi(){
   const {row1,row2,row3}=computeKPIs();
@@ -2662,7 +2715,9 @@ document.getElementById("btnClear").onclick=()=>{
   document.getElementById("planFilter").value="";
   renderAll();
 };
-document.getElementById("dailyDate").addEventListener("change",e=>{ state.dailyDate=e.target.value; renderTable(); });
+document.getElementById("detailFrom").addEventListener("change",e=>{ state.detailFrom=e.target.value; renderTable(); });
+document.getElementById("detailTo").addEventListener("change",e=>{ state.detailTo=e.target.value; renderTable(); });
+document.getElementById("detailPid").addEventListener("input",e=>{ state.detailPid=e.target.value; renderTable(); });
 /* 快捷日期区间 + 趋势图点击单日选择 */
 function applyRange(from,to){
   state.dateFrom=from||""; state.dateTo=to||"";

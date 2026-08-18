@@ -37,6 +37,7 @@ TABLES = {
     "summary": {"id": "tblxHX2jbknVxVvE", "dim": "总览", "plan": "全部"},
     "plan":    {"id": "tblUh5cwqhOeu5UD", "dim": "计划", "plan": None},     # plan 取自「一级产品」
     "product": {"id": "tblwXndSi35hLq8R", "dim": "商品", "plan": "大客方案"},  # 强制大客方案
+    "tuidian": {"id": "tbliISzmQA9JqUig", "dim": "商品", "plan": "全站推店"},  # 全站推店 商品×日期明细
     "weather": {"id": "tblExpIMkbUNESTt", "dim": None, "plan": None},
     "dateweek":{"id": "tbl2oWNcQOwLntTX", "dim": None, "plan": None},
     # 同一 Base 内的两份「到单品」日更数据源，用于优化周报/月报
@@ -241,11 +242,21 @@ def fetch_table_export(table_id, token):
     return out
 
 def fetch_table(table_id):
-    """分发：有 FEISHU_APP_ID/SECRET 走云端 API；否则走本机 lark-cli。"""
+    """分发：有 FEISHU_APP_ID/SECRET 走云端 API；否则走本机 lark-cli。
+    容错：单表拉取失败（如应用无该表权限 RolePermNotAllow）先回退 lark-cli 用户会话，
+    再不行则跳过该表返回 []，绝不连累其他表同步。"""
     if os.environ.get("FEISHU_APP_ID") and os.environ.get("FEISHU_APP_SECRET"):
         if not getattr(fetch_table, "_token", None):
             fetch_table._token = _feishu_tenant_token()
-        return fetch_table_api(table_id, fetch_table._token)
+        try:
+            return fetch_table_api(table_id, fetch_table._token)
+        except Exception as e:
+            print(f"  ! 表 {table_id} API 拉取失败({e})，回退 lark-cli 用户会话…")
+            try:
+                return fetch_table_lark(table_id)
+            except Exception as e2:
+                print(f"  ! 表 {table_id} lark-cli 也失败({e2})，跳过该表（不阻塞其他表同步）")
+                return []
     return fetch_table_lark(table_id)
 
 def to_date(v):
@@ -339,6 +350,49 @@ def ffirst(r, keys):
         if v is not None:
             return v
     return None
+
+def build_tuidian(raw):
+    """全站推店 商品×日期明细(tbliISzmQA9JqUig) -> CANON 规范记录。
+    该表只有「消耗量/曝光/点击/询盘/线索/成交笔数(deal)」等，无成交金额，
+    故标准金额 ROI 保持 None，成交以 deal(广告引导交易数) 体现效率。"""
+    out = []
+    for r in raw:
+        date = to_date(r.get("日期"))
+        if not date:
+            continue
+        pid = str(r.get("商品ID") or "").strip()
+        if pid in ("", "汇总", "-"):
+            continue
+        rec = {k: None for k in CANON}
+        rec["dim"] = "商品"
+        rec["plan"] = "全站推店"
+        rec["date"] = date
+        rec["pid"] = pid
+        rec["sku"] = (MAPPING or {}).get(pid, "")
+        rec["title"] = str(r.get("offer标题") or "").strip()
+        rec["cost"] = to_float(r.get("消耗量"))
+        rec["imp"] = to_float(r.get("曝光量"))
+        rec["vexp"] = to_float(r.get("扶持曝光量"))
+        rec["clk"] = to_float(r.get("点击量"))
+        rec["ctr"] = to_float(r.get("点击转化率"))
+        rec["ordAd"] = to_float(r.get("点击立即订购数"))
+        rec["ord"] = to_float(r.get("提交订单数"))
+        rec["cart"] = to_float(r.get("加购数"))
+        rec["coupon"] = to_float(r.get("优惠券数"))
+        rec["favP"] = to_float(r.get("收藏商品数"))
+        rec["favS"] = to_float(r.get("收藏店铺数"))
+        rec["inq"] = to_float(r.get("询盘量"))
+        rec["inqCost"] = to_float(r.get("询盘成本"))
+        rec["lead"] = to_float(r.get("线索量"))
+        rec["leadCost"] = to_float(r.get("线索成本"))
+        rec["deal"] = to_float(r.get("广告引导交易数"))
+        # 派生比率
+        if rec["ctr"] is None and rec["imp"] and rec["clk"]:
+            rec["ctr"] = rec["clk"] / rec["imp"]
+        if rec["cpc"] is None and rec["clk"] and rec["cost"]:
+            rec["cpc"] = rec["cost"] / rec["clk"]
+        out.append(rec)
+    return out
 
 def build_jst(raw):
     """聚水潭产品级日更 -> 到单品每日记录（销售额/毛利率/退款）。"""
@@ -525,8 +579,14 @@ def main():
 
     merged = []
     for key in ("summary", "plan", "product"):
-        recs = build_records(raw[key], TABLES[key])
-        print(f"  -> {key} 规范化: {len(recs)} 条")
+        if key in raw:
+            recs = build_records(raw[key], TABLES[key])
+            print(f"  -> {key} 规范化: {len(recs)} 条")
+            merged.extend(recs)
+    # 全站推店 商品×日期明细（字段名与大客商品表不同，独立解析）
+    if "tuidian" in raw:
+        recs = build_tuidian(raw["tuidian"])
+        print(f"  -> 全站推店(tuidian) 规范化: {len(recs)} 条")
         merged.extend(recs)
 
     # 聚水潭 / 生意参谋：到单品日更，用于周报月报的销售额/退款/访客/转化等
@@ -547,7 +607,8 @@ def main():
     # ROI 口径 = 广告引导成交(gmv) / 该层级实际消耗(cost)，与商品卡 ROI 同一定义。
     prod_acc = {}  # (date, plan) -> [cost, gmv]
     for r in merged:
-        if r.get("dim") != "商品":
+        # 仅聚合「有成交金额」的商品行；全站推店无 gmv，排除以避免稀释其他计划/总览 ROI
+        if r.get("dim") != "商品" or not r.get("gmv"):
             continue
         k = (r.get("date"), r.get("plan"))
         acc = prod_acc.setdefault(k, [0.0, 0.0])

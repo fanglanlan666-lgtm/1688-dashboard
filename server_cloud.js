@@ -75,29 +75,45 @@ function handleSync(res) {
     PYTHONPATH: process.env.PYTHONPATH || '',
     DATA_OUT_DIR: process.env.DATA_OUT_DIR || ROOT
   });
-  const cmd = syncCommand();
-  const executable = cmd[0];
-  const args = cmd.slice(1);
-  const p = spawn(executable, args, { cwd: ROOT, env: env, windowsHide: true });
-  let out = '', err = '';
-  p.stdout.on('data', d => { out += d; });
-  p.stderr.on('data', d => { err += d; });
-  p.on('error', e => {
-    syncing = false;
-    res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ ok: false, msg: '无法启动同步进程：' + e.message }));
-  });
-  p.on('close', code => {
-    syncing = false;
-    const log = (code === 0 ? out : (err || out)).slice(-1500);
-    if (code === 0) {
+  // 顺序执行：1) 业务数据同步(data.js)  2) 目标达成(飞书目标表 -> targets.js)
+  const cmds = [ [PY, 'sync_feishu.py'], [PY, 'build_targets.py', '--feishu'] ];
+  let i = 0, log = '';
+  function step() {
+    if (i >= cmds.length) {
+      syncing = false;
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ ok: true, msg: '已从飞书多维表拉取最新数据并刷新 data.js', log: log }));
-    } else {
-      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ ok: false, msg: '同步失败（退出码 ' + code + '），详见日志', log: log }));
+      res.end(JSON.stringify({ ok: true, msg: '已刷新业务数据(data.js)与目标达成(targets.js)', log: log.slice(-1800) }));
+      return;
     }
-  });
+    const cmd = cmds[i++];
+    const p = spawn(cmd[0], cmd.slice(1), { cwd: ROOT, env: env, windowsHide: true });
+    let out = '', err = '';
+    p.stdout.on('data', d => { out += d; });
+    p.stderr.on('data', d => { err += d; });
+    p.on('error', e => {
+      syncing = false;
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: false, msg: '无法启动同步进程：' + e.message, log: log + err }));
+    });
+    p.on('close', code => {
+      const tag = `[${i}] ${cmd.join(' ')} -> exit ${code}`;
+      log += tag + '\n' + (code === 0 ? out : err);
+      if (code !== 0) {
+        if (i === 1) { // 业务数据同步失败：整体失败
+          syncing = false;
+          res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: false, msg: '业务数据同步失败（退出码 ' + code + '），详见日志', log: log.slice(-1800) }));
+          return;
+        }
+        // 目标达成生成失败：仅警告，业务数据已成功
+        log += '\n[警告] 目标达成(targets.js)生成失败（已跳过），业务数据正常。\n';
+        step();
+      } else {
+        step();
+      }
+    });
+  }
+  step();
 }
 
 const server = http.createServer((req, res) => {

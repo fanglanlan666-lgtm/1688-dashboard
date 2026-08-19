@@ -259,6 +259,38 @@ def fetch_table(table_id):
                 return []
     return fetch_table_lark(table_id)
 
+def field_id_to_name(table_id):
+    """返回 {field_id: 字段名}。lark-cli 模式拉取的记录以字段ID为键，
+    需据此映射回中文名，才能与 build_targets.py 的中文列名对齐。"""
+    if os.environ.get("FEISHU_APP_ID") and os.environ.get("FEISHU_APP_SECRET"):
+        if not getattr(field_id_to_name, "_tok", None):
+            field_id_to_name._tok = _feishu_tenant_token()
+        tok = field_id_to_name._tok
+        out = {}
+        url = FEISHU_BASE_URL + "/open-apis/bitable/v1/apps/%s/tables/%s/fields?page_size=200" % (BASE_TOKEN, table_id)
+        while True:
+            req = urllib.request.Request(url, headers={"Authorization": "Bearer " + tok})
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                d = json.loads(resp.read().decode("utf-8"))
+            if d.get("code") != 0:
+                raise RuntimeError("拉字段失败(表%s): %s" % (table_id, d.get("msg")))
+            for it in (d.get("data") or {}).get("items") or []:
+                fid = it.get("field_id") or it.get("fieldId")
+                fn = it.get("field_name") or it.get("name")
+                if fid and fn:
+                    out[fid] = fn
+            pt = (d.get("data") or {}).get("page_token")
+            if not pt or not (d.get("data") or {}).get("has_more"):
+                break
+            url = (FEISHU_BASE_URL + "/open-apis/bitable/v1/apps/%s/tables/%s/fields?page_size=200&page_token=%s"
+                   % (BASE_TOKEN, table_id, urllib.parse.quote(pt)))
+        return out
+    # lark-cli 模式
+    out = run_lark(["base", "+field-list", "--base-token", BASE_TOKEN, "--table-id", table_id, "--as", "user"])
+    obj = json.loads(out)
+    items = (obj.get("data") or {}).get("fields") or []
+    return {it.get("id"): it.get("name") for it in items if it.get("id")}
+
 def to_date(v):
     if v is None: return ""
     # 飞书「日期」类型返回毫秒时间戳，基准为【北京时间 UTC+8】（如 1785513600000 = 2026-08-01）。

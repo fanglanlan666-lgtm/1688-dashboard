@@ -718,20 +718,26 @@ def main():
         else:
             print("  （未找到 产品主图.xlsx，商品主图不显示）")
 
-    # 商品异常统计（缺款号/缺主图），供前端 banner 提示
+    # 商品异常统计（按唯一 产品ID 计，缺款号/缺主图），供前端 banner 提示
     anomaly = {"products_missing_sku": 0, "products_missing_img": 0,
                "total_products": 0, "examples_sku": [], "examples_img": []}
+    seen = set()
     for r in merged:
-        if r.get("dim") == "商品" and r.get("pid"):
-            anomaly["total_products"] += 1
-            if not r.get("sku"):
-                anomaly["products_missing_sku"] += 1
-                if len(anomaly["examples_sku"]) < 8:
-                    anomaly["examples_sku"].append(r["pid"])
-            if not r.get("img"):
-                anomaly["products_missing_img"] += 1
-                if len(anomaly["examples_img"]) < 8:
-                    anomaly["examples_img"].append(r["sku"] or r["pid"])
+        if r.get("dim") != "商品" or not r.get("pid"):
+            continue
+        pid = r["pid"]
+        if pid in seen:
+            continue
+        seen.add(pid)
+        anomaly["total_products"] += 1
+        if not r.get("sku"):
+            anomaly["products_missing_sku"] += 1
+            if len(anomaly["examples_sku"]) < 8:
+                anomaly["examples_sku"].append(pid)
+        if not r.get("img"):
+            anomaly["products_missing_img"] += 1
+            if len(anomaly["examples_img"]) < 8:
+                anomaly["examples_img"].append(r.get("sku") or pid)
     if anomaly["total_products"]:
         print(f"  -> 商品异常统计：{anomaly['total_products']} 款，缺款号 {anomaly['products_missing_sku']}，缺主图 {anomaly['products_missing_img']}")
 

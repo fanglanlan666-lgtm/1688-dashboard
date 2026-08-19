@@ -40,6 +40,7 @@ TABLES = {
     "tuidian": {"id": "tbliISzmQA9JqUig", "dim": "商品", "plan": "全站推店"},  # 全站推店 商品×日期明细
     "weather": {"id": "tblExpIMkbUNESTt", "dim": None, "plan": None},
     "dateweek":{"id": "tbl2oWNcQOwLntTX", "dim": None, "plan": None},
+    "prodmap": {"id": "tbl2hYTuFFpzdmfX", "dim": None, "plan": None},  # 商品档案：产品ID→款号/主图/链接（款号+主图权威来源）
     # 同一 Base 内的两份「到单品」日更数据源，用于优化周报/月报
     "jst":     {"id": "tblta8i67Iwyo1D8", "dim": "聚水潭", "plan": None},   # 聚水潭产品级日更（销量/毛利率/退款）
     "sygc":    {"id": "tblxLgoFJWWfHozn", "dim": "生意参谋", "plan": None}, # 生意参谋产品级日更（访客/点击/转化/加购）
@@ -383,6 +384,32 @@ def ffirst(r, keys):
             return v
     return None
 
+def build_prodmap(rows):
+    """tbl2hYTuFFpzdmfX（商品档案）→ {产品ID: {sku, img, link}}。
+    作为商品维度「款号 + 主图」的权威来源，替代旧 Excel 映射(商品id款号映射.xlsx/产品主图.xlsx)。
+    主图为 1688 直链(alicdn)，浏览器直接加载，无需下载到本地。"""
+    m = {}
+    if not rows:
+        return m
+    for r in rows:
+        pid = str(r.get("产品ID") or "").strip()
+        if not pid:
+            continue
+        # 款号：主款号(多选取首项) 优先，回退 产品货号
+        sku = str(_fv(r.get("主款号")) or r.get("产品货号") or "").strip()
+        # 主图：依次尝试 产品主图1~5，取第一个非空直链
+        img = ""
+        for i in range(1, 6):
+            v = r.get(f"产品主图{i}")
+            if isinstance(v, list):
+                v = v[0] if v else ""
+            if v and str(v).strip():
+                img = str(v).strip()
+                break
+        link = str(r.get("产品链接") or "").strip()
+        m[pid] = {"sku": sku, "img": img, "link": link}
+    return m
+
 def build_tuidian(raw):
     """全站推店 商品×日期明细(tbliISzmQA9JqUig) -> CANON 规范记录。
     该表只有「消耗量/曝光/点击/询盘/线索/成交笔数(deal)」等，无成交金额，
@@ -663,16 +690,50 @@ def main():
                 r["gmv"] = round(acc[1], 2)
                 r["roi"] = round(acc[1] / r["cost"], 4)  # 用计划行自身 cost 作分母，口径一致
 
-    # 关联主图（复用 产品主图.xlsx）
-    img_map = ingest.load_img_map()
-    if img_map:
-        pid_set = set(r.get("pid") for r in merged if r.get("dim") == "商品" and r.get("pid"))
-        img_paths = ingest.download_images(pid_set, img_map)
+    # 关联 款号 + 主图 + 商品链接：以飞书商品档案表(tbl2hYTuFFpzdmfX)为权威来源；
+    # 该表为空时回退旧 Excel(商品id款号映射.xlsx / 产品主图.xlsx)，保证管道不中断。
+    prodmap = build_prodmap(raw.get("prodmap"))
+    if prodmap:
+        print(f"  -> 商品档案映射: {len(prodmap)} 条 (产品ID→款号/主图)")
         for r in merged:
-            if r.get("dim") == "商品":
-                r["img"] = img_paths.get(r.get("pid"), "")
+            if r.get("dim") == "商品" and r.get("pid"):
+                mp = prodmap.get(r["pid"])
+                if mp:
+                    if mp.get("sku"):
+                        r["sku"] = mp["sku"]
+                    if mp.get("img"):
+                        r["img"] = mp["img"]
     else:
-        print("  （未找到 产品主图.xlsx，商品主图不显示）")
+        print("  （飞书商品档案表为空，回退 商品id款号映射.xlsx / 产品主图.xlsx）")
+        for r in merged:
+            if r.get("dim") == "商品" and r.get("pid") and not r.get("sku"):
+                r["sku"] = MAPPING.get(r["pid"], "")
+        img_map = ingest.load_img_map()
+        if img_map:
+            pid_set = set(r.get("pid") for r in merged if r.get("dim") == "商品" and r.get("pid"))
+            img_paths = ingest.download_images(pid_set, img_map)
+            for r in merged:
+                if r.get("dim") == "商品":
+                    r["img"] = img_paths.get(r.get("pid"), "")
+        else:
+            print("  （未找到 产品主图.xlsx，商品主图不显示）")
+
+    # 商品异常统计（缺款号/缺主图），供前端 banner 提示
+    anomaly = {"products_missing_sku": 0, "products_missing_img": 0,
+               "total_products": 0, "examples_sku": [], "examples_img": []}
+    for r in merged:
+        if r.get("dim") == "商品" and r.get("pid"):
+            anomaly["total_products"] += 1
+            if not r.get("sku"):
+                anomaly["products_missing_sku"] += 1
+                if len(anomaly["examples_sku"]) < 8:
+                    anomaly["examples_sku"].append(r["pid"])
+            if not r.get("img"):
+                anomaly["products_missing_img"] += 1
+                if len(anomaly["examples_img"]) < 8:
+                    anomaly["examples_img"].append(r["sku"] or r["pid"])
+    if anomaly["total_products"]:
+        print(f"  -> 商品异常统计：{anomaly['total_products']} 款，缺款号 {anomaly['products_missing_sku']}，缺主图 {anomaly['products_missing_img']}")
 
     # 写 data.js（与 ingest 同格式）
     js_rows = []
@@ -721,8 +782,9 @@ def main():
             print("  ⚠️ budget.json 读取失败:", e)
 
     OUT_JS = os.path.join(OUT_DIR, "data.js")
+    anomaly_js = "window.DASHBOARD_ANOMALY = " + json.dumps(anomaly, ensure_ascii=False) + ";\n"
     with open(OUT_JS, "w", encoding="utf-8") as f:
-        f.write(budget_js + cal_js + weather_js + jst_js + sygc_js + jstsku_js + sygcsku_js +
+        f.write(anomaly_js + budget_js + cal_js + weather_js + jst_js + sygc_js + jstsku_js + sygcsku_js +
                 "window.DASHBOARD_DATA = " + json.dumps(js_rows, ensure_ascii=False) + ";\n")
     print(f"完成：{len(js_rows)} 条记录 + 日历 {len(cal)} 天 + 气温 {len(weather)} 条 + 聚水潭[日{len(jst_day)}/单品{sum(len(v) for v in jst_sku.values())}] + 生意参谋[日{len(sygc_day)}/单品{sum(len(v) for v in sygc_sku.values())}] -> data.js")
 

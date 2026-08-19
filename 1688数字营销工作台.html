@@ -2426,7 +2426,7 @@ function renderAnomaly(){
   if(A.examples_img && A.examples_img.length) ex.push("缺主图示例："+A.examples_img.slice(0,5).join("、"));
   el.innerHTML=`<span class="ab-ic">⚠️</span><div class="ab-tx"><b>数据异常提醒</b>：本次导入的商品数据存在 ${list.join("，")}，可能无法在「按商品」明细中正确归并与展示主图。`
     + (ex.length?`<div class="ab-list">${ex.join("；")}</div>`:"")
-    + `<div class="ab-list">建议核对后台导出表是否漏填款号/主图，或更新 <code>映射/商品id款号映射.xlsx</code> 后重新运行 ingest.py。</div></div>`;
+    + `<div class="ab-list">款号/主图取自飞书「商品档案」表（wiki 内 tbl2hYTuFFpzdmfX）。请在该表补填对应 产品ID 的 主款号 与 产品主图1 后，点「数据更新」重新同步即可。</div></div>`;
   el.style.display="flex";
 }
 

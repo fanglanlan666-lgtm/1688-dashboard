@@ -24,6 +24,10 @@ WS = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, WS)
 import ingest  # 复用映射与清洗逻辑
 
+# 在售商品导出.xlsx（后台导出的全量在售商品，含 产品ID/产品货号/产品主图1~5），
+# 作为飞书商品档案表(tbl2hYTuFFpzdmfX)的二级兜底：飞书未填的款号/主图用此表补齐。
+EXPORT_PROD_XLSX = os.path.join(WS, "映射", "在售商品导出.xlsx")
+
 LARK_BIN = (os.environ.get("LARK_BIN") or
             r"C:/Users/Administrator/.workbuddy/binaries/node/cli-connector-packages/node_modules/@larksuite/cli/bin/lark-cli.exe")
 BASE_TOKEN = "HLOQbPqJJa4N60sVeL7cFcShnGd"
@@ -410,6 +414,34 @@ def build_prodmap(rows):
         m[pid] = {"sku": sku, "img": img, "link": link}
     return m
 
+def load_export_prodmap(path):
+    """在售商品导出.xlsx(后台全量在售商品) -> {产品ID: {sku, img}}。
+    作为飞书商品档案表/旧Excel 的二级兜底：前者未填的款号/主图，用此表补齐。
+    表头第 0 行首格被写成某个产品ID、其余列是表头文本，故按「首格非数字 / 货号列=产品货号」跳过。"""
+    try:
+        import openpyxl
+    except Exception:
+        return {}
+    if not os.path.exists(path):
+        return {}
+    try:
+        wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+        ws = wb.active
+    except Exception as e:
+        print(f"  （在售商品导出表读取失败: {e}）")
+        return {}
+    m = {}
+    for row in ws.iter_rows(min_row=1, values_only=True):
+        if len(row) < 5:
+            continue
+        pid = str(row[0]).strip() if row[0] is not None else ""
+        huo = str(row[3]).strip() if row[3] is not None else ""
+        img = str(row[4]).strip() if row[4] is not None else ""
+        if huo in ("产品货号",) or not pid.isdigit():
+            continue
+        m[pid] = {"sku": huo, "img": img}
+    return m
+
 def build_tuidian(raw):
     """全站推店 商品×日期明细(tbliISzmQA9JqUig) -> CANON 规范记录。
     该表只有「消耗量/曝光/点击/询盘/线索/成交笔数(deal)」等，无成交金额，
@@ -717,6 +749,26 @@ def main():
                     r["img"] = img_paths.get(r.get("pid"), "")
         else:
             print("  （未找到 产品主图.xlsx，商品主图不显示）")
+
+    # 二级兜底：飞书商品档案表(及旧Excel)仍未补齐的款号/主图，用「在售商品导出.xlsx」补洞
+    try:
+        exp_map = load_export_prodmap(EXPORT_PROD_XLSX)
+        if exp_map:
+            filled_sku = filled_img = 0
+            for r in merged:
+                if r.get("dim") != "商品" or not r.get("pid"):
+                    continue
+                em = exp_map.get(r["pid"])
+                if not em:
+                    continue
+                if not r.get("sku") and em.get("sku"):
+                    r["sku"] = em["sku"]; filled_sku += 1
+                if not r.get("img") and em.get("img"):
+                    r["img"] = em["img"]; filled_img += 1
+            if filled_sku or filled_img:
+                print(f"  -> 在售商品导出表补洞: 款号 {filled_sku} 个, 主图 {filled_img} 个")
+    except Exception as e:
+        print(f"  （在售商品导出表补洞失败，已跳过: {e}）")
 
     # 商品异常统计（按唯一 产品ID 计，缺款号/缺主图），供前端 banner 提示
     anomaly = {"products_missing_sku": 0, "products_missing_img": 0,

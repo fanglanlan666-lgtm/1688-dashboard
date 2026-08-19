@@ -393,6 +393,9 @@
         <button data-g="计划">按计划</button>
         <button data-g="商品" class="on">按商品</button>
       </span>
+      <span class="seg" id="prodPlanSeg" style="display:none;margin-left:8px">
+        <button data-pp="">全部计划</button>
+      </span>
       <span class="daily-date">
         <label>按日期</label>
         <span class="daily-date"><label>开始</label><input type="date" id="detailFrom"><label>结束</label><input type="date" id="detailTo"></span>
@@ -1254,6 +1257,9 @@ function renderTableInto(el, rows, cols, which){
 function renderTable(){
   const wrap=document.getElementById("detailWrap");
   const g=state.grain;
+  const prodPlanSeg=document.getElementById("prodPlanSeg");
+  if(prodPlanSeg) prodPlanSeg.style.display = (g==="商品") ? "inline-flex" : "none";
+  syncProdPlanUI();
   const df=state.detailFrom, dt=state.detailTo, dp=(state.detailPid||"").trim().toLowerCase();
   const filtering = df||dt||dp;
   if(g==="总览"){
@@ -1290,7 +1296,8 @@ function renderTable(){
   }
   const allKeys=sortedSum.map(o=>o._key);
   const expSet = filtering ? new Set(allKeys) : (state.expanded||{});
-  const label = g==="商品" ? "按款号分组" : "按计划分组";
+  const planScope = (g==="商品" && state.planFilter) ? "（"+state.planFilter+"）" : "";
+  const label = (g==="商品" ? "按款号分组" : "按计划分组") + planScope;
   const allOpen = allKeys.length>0 && allKeys.every(k=>(state.expanded||{})[k]);
   const sortBtns = SORT_OPTS[g].map(o=>{
     const on=state.sortKey2[which].key===o.k;
@@ -2380,6 +2387,7 @@ function renderAll(){
   renderPlanChart();
   renderProdChart();
   renderTable();
+  refreshProdPlanOptions();
   renderAI();
   renderBudget();
   renderConsume();
@@ -2422,6 +2430,25 @@ function renderAnomaly(){
   el.style.display="flex";
 }
 
+/* 商品明细：计划切换标签（仅「按商品」视图显示；选项来自实际有商品的计划） */
+function syncProdPlanUI(){
+  const seg=document.getElementById("prodPlanSeg");
+  if(!seg) return;
+  seg.querySelectorAll("button").forEach(b=> b.classList.toggle("on", (b.dataset.pp||"")===state.planFilter));
+}
+function refreshProdPlanOptions(){
+  const plans=[...new Set(dimRows("商品").map(r=>r.plan))].filter(Boolean).sort();
+  const seg=document.getElementById("prodPlanSeg");
+  if(!seg) return;
+  seg.innerHTML='<button data-pp="">全部计划</button>'+plans.map(p=>`<button data-pp="${p}">${p}</button>`).join("");
+  seg.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+    state.planFilter=b.dataset.pp;
+    const pf=document.getElementById("planFilter"); if(pf) pf.value=state.planFilter;
+    renderAll();
+  });
+  syncProdPlanUI();
+}
+
 /* ============ 筛选 UI ============ */
 function refreshPlanOptions(){
   const plans=[...new Set(dimRows("计划").map(r=>r.plan))].filter(Boolean).sort();
@@ -2430,7 +2457,7 @@ function refreshPlanOptions(){
   sel.innerHTML='<option value="">全部计划</option>'+plans.map(p=>`<option value="${p}">${p}</option>`).join("");
   if(plans.includes(cur)) sel.value=cur;
 }
-function syncPlanFilterUI(){ document.getElementById("planFilter").value = state.planFilter; }
+function syncPlanFilterUI(){ document.getElementById("planFilter").value = state.planFilter; syncProdPlanUI(); }
 
 /* ============ CSV / 粘贴导入 ============ */
 const ALIAS={

@@ -78,10 +78,36 @@ def _to_str(v):
     if v is None: return ""
     return str(v).strip()
 
+def _norm_feishu_date(v):
+    """飞书日期字段在 API 模式下返回毫秒时间戳(int/float)，lark-cli 模式返回 'YYYY/MM/DD' 字符串。
+    统一归一为 'YYYY/MM/DD'。返回 (字符串, 是否由时间戳转换而来)。"""
+    import datetime
+    s = _to_str(v).strip()
+    if not s:
+        return s, False
+    # 纯数字（含小数点）= 时间戳
+    if re.fullmatch(r"\d+(\.\d+)?", s):
+        try:
+            ts = int(float(s))
+            if ts > 1e12:        # 毫秒
+                pass
+            elif ts > 1e9:       # 秒
+                ts *= 1000
+            else:
+                ts = None
+            if ts:
+                # 飞书日期字段存的是【中国时区 UTC+8 零点】的时间戳，必须按 +8 解析，否则按 UTC 会少一天
+                tz_cst = datetime.timezone(datetime.timedelta(hours=8))
+                dt = datetime.datetime.fromtimestamp(ts / 1000.0, tz=tz_cst)
+                return f"{dt.year}/{dt.month:02d}/{dt.day:02d}", True
+        except Exception:
+            pass
+    return s, False
+
 def convert_row(raw):
     """把飞书一行（中文列名或字段ID键）转成与旧 CSV 同口径的中文列 dict。"""
     out = {}
-    d = _to_str(raw.get("日期"))
+    d, _ = _norm_feishu_date(raw.get("日期"))
     m = re.search(r"(\d{4})[-/](\d{1,2})[-/](\d{1,2})", d)
     out["日期"] = f"{m.group(1)}/{int(m.group(2)):02d}/{int(m.group(3)):02d}" if m else d
 

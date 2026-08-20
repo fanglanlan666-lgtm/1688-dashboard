@@ -71,7 +71,8 @@
   .thumb{width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#f4f6fa;display:block}
   .thumb-wrap{display:flex;align-items:center;gap:8px}
   /* 明细表：主图列收窄、与款号紧贴；表头 th 也要同 td 一起约束宽度，否则列头会撑开空隙 */
-  .dtable td.img-col,.dtable th.img-col{padding:4px 6px 4px 4px;width:1%;white-space:nowrap}
+  .dtable td.img-col,.dtable th.img-col{padding:4px 2px 4px 4px;width:1%;white-space:nowrap}
+  .dtable td.img-col+td,.dtable th.img-col+th{padding-left:4px}
   .dtable td.ai-cell{text-align:left;white-space:normal;line-height:1.45;vertical-align:top;min-width:220px}
   /* Progress */
   .barwrap{height:13px;background:#eef1f6;border-radius:8px;overflow:hidden;margin:10px 0 6px}
@@ -491,7 +492,7 @@
 
     <!-- Tab5 日数据（多指标组合图） -->
     <div id="consDaily" style="display:none">
-      <div class="tip" style="margin-bottom:8px">按日聚合全部计划的推广指标（消耗为柱，PPC/点击率/ROI 为折线，双 Y 轴）</div>
+      <div class="tip" style="margin-bottom:8px">按日聚合全部计划；单指标显示合计与各计划走势，多指标时消耗/成交金额/点击量用柱、PPC/点击率/ROI用折线（双Y轴，图例可点隐藏）</div>
       <div id="consDailyChart"></div>
     </div>
   </div>
@@ -1956,16 +1957,17 @@ function renderConsDaily(){
       cfg.lines=[{name:"合计",color:"#ff6a00",values:total,fmt:f}].concat(plans.map((p,i)=>({name:p,color:CONSUME_PAL[(i+1)%CONSUME_PAL.length],values:dates.map(d=>metricSeries(prows.filter(r=>r.date===d&&r.plan===p),m)),fmt:f})));
     }
   } else {
-    // 多指标：每个指标一条折线；量类放左轴，率类放右轴；不叠加计划线避免过乱
+    // 多指标：量类（消耗/成交金额/点击量）用柱（左轴），率类（PPC/点击率/ROI）用折线（右轴）
     metrics.forEach((m,idx)=>{
       const isVol=!!METRIC_VOLUME[m];
-      cfg.lines.push({
+      const s={
         name:metricName(m),
         color:METRIC_COLORS[m]||CONSUME_PAL[idx%CONSUME_PAL.length],
-        axis:isVol?'left':'right',
         values:dates.map(d=>metricSeries(prows.filter(r=>r.date===d),m)),
         fmt:metricFmt(m)
-      });
+      };
+      if(isVol) cfg.bars.push(s);
+      else { s.axis='right'; cfg.lines.push(s); }
     });
     cfg.opt.yfmtLeft = metrics.some(m=>METRIC_VOLUME[m] && (m==='cost'||m==='gmv')) ? money : fmt;
     cfg.opt.yfmtRight = v=> v==null ? '—' : v.toFixed(2);

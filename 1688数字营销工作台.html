@@ -179,12 +179,12 @@
   /* 目标达成视图 —— KPI 分组：统一白底 + 浅灰边框，不用色条/彩底，颜色只落在数值上 */
   /* 组宽严格按卡片数比例(flex-basis:0)，组间/组内 gap 一致 → 8 张卡等宽等高排成一行 */
   .tkpi-groups{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px;align-items:stretch}
-  .tkpi-group{flex:var(--w,3) 1 0;min-width:0;display:flex;flex-direction:column}
+  .tkpi-group{flex:var(--w,3) 1 0;display:flex;flex-direction:column}
   .tkpi-group-title{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.4px;margin:0 0 8px 2px;display:flex;align-items:center;gap:8px;white-space:nowrap}
   .tkpi-group-title::after{content:"";flex:1;height:1px;background:var(--line)}
-  .tkpi-yesterday{font-size:13px;font-weight:800;color:#fff;background:linear-gradient(90deg,#2f6bff,#7c3aed);display:inline-block;padding:5px 14px;border-radius:20px;margin:14px 0 10px 2px;letter-spacing:.3px;box-shadow:0 4px 12px rgba(47,107,255,.28)}
+  .tkpi-yesterday{flex:0 0 100%;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(90deg,#2f6bff,#7c3aed);display:inline-block;padding:5px 14px;border-radius:20px;margin:14px 0 10px 2px;letter-spacing:.3px;box-shadow:0 4px 12px rgba(47,107,255,.28)}
   .tkpi-row{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:14px;flex:1}
-  .tkpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:98px}
+  .tkpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:160px;min-height:98px}
   .tkpi .t{font-size:12px;color:var(--sub);font-weight:600;line-height:1.35}
   .tkpi .v{font-size:clamp(18px,1.45vw,22px);font-weight:800;margin-top:8px;line-height:1.15;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px}
   .tkpi .v.warn{color:var(--red)} .tkpi .v.good{color:var(--green)} .tkpi .v.cost{color:var(--orange)}

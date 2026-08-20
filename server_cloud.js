@@ -169,8 +169,8 @@ const server = http.createServer((req, res) => {
     }
     const ext = path.extname(filePath).toLowerCase();
     const headers = Object.assign({ 'Content-Type': MIME[ext] || 'application/octet-stream' }, corsHeaders());
-    // data.js / targets.js 禁止缓存，确保点「数据更新」后能立即看到新数据
-    if (ext === '.js' && /(^|[\/])(data|targets)\.js$/.test(rel)) {
+    // data.js / targets.js / html 禁止缓存，确保改完前端和数据后能立即看到
+    if (ext === '.html' || (ext === '.js' && /(^|[\/])(data|targets)\.js$/.test(rel))) {
       headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
     }
     res.writeHead(200, headers);

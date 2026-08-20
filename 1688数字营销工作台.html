@@ -70,8 +70,8 @@
   /* 商品主图 */
   .thumb{width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#f4f6fa;display:block}
   .thumb-wrap{display:flex;align-items:center;gap:8px}
-  /* 明细表：主图列收窄、与款号紧贴；AI 分析结论左对齐并顶部对齐，便于多行文本阅读 */
-  .dtable td.img-col{padding:4px 6px 4px 4px;width:1%;white-space:nowrap}
+  /* 明细表：主图列收窄、与款号紧贴；表头 th 也要同 td 一起约束宽度，否则列头会撑开空隙 */
+  .dtable td.img-col,.dtable th.img-col{padding:4px 6px 4px 4px;width:1%;white-space:nowrap}
   .dtable td.ai-cell{text-align:left;white-space:normal;line-height:1.45;vertical-align:top;min-width:220px}
   /* Progress */
   .barwrap{height:13px;background:#eef1f6;border-radius:8px;overflow:hidden;margin:10px 0 6px}
@@ -685,7 +685,8 @@ function allRows(){ return DATA.concat(LOCAL); }
 
 /* ============ 状态 ============ */
 const state = {
-  dateFrom:"", dateTo:"", planFilter:"", budgetYear:0, budgetMonth:0, planBudgets:{}, consMetric:"cost", targetFrom:"", targetTo:"",
+  dateFrom:"", dateTo:"", planFilter:"", budgetYear:0, budgetMonth:0, planBudgets:{}, consMetrics:["cost"], targetFrom:"", targetTo:"",
+
   grain:"商品", trend:"cost", detailFrom:"", detailTo:"", detailPid:"", expanded:{}, view:"marketing", planView:"amount", consumeView:"struct",
   sortKey2:{ overview:{key:"date",dir:1}, plan:{key:"cost",dir:-1}, prod:{key:"cost",dir:-1}, daily:{key:"date",dir:1} }
 };
@@ -868,6 +869,7 @@ let consHidden={};
 function metricName(m){return ({cost:"消耗",clk:"点击量",gmv:"成交金额",ppc:"PPC",ctr:"点击率",roi:"ROI"})[m]||m;}
 /* 指标是否为「量/金额」类（用柱展示），比率类（PPC/点击率/ROI）用折线展示 */
 const METRIC_VOLUME={cost:true,clk:true,gmv:true};
+const METRIC_COLORS={cost:"#ff6a00",clk:"#2f6bff",gmv:"#15a35a",ppc:"#7c3aed",ctr:"#e23b3b",roi:"#f59e0b"};
 /* 按指标聚合一组行的数值（比率类由原始字段推导） */
 function metricSeries(rows, m){
   const cost=sum(rows,"cost"), clk=sum(rows,"clk"), gmv=sum(rows,"gmv"), imp=sum(rows,"imp");
@@ -888,7 +890,15 @@ function metricFmt(m){
   return fmt;
 }
 function toggleConsSeries(name){
-  consHidden[name]=!consHidden[name];
+  // 多指标模式下，点击指标图例视为从切换器反选；单指标/计划线仍走 consHidden
+  const metricKeyByName={"消耗":"cost","点击量":"clk","成交金额":"gmv","PPC":"ppc","点击率":"ctr","ROI":"roi"};
+  const k=metricKeyByName[name];
+  if(k && state.consMetrics.length>1 && state.consMetrics.includes(k)){
+    state.consMetrics=state.consMetrics.filter(x=>x!==k);
+    document.querySelectorAll("#consMetricSeg button").forEach(b=> b.classList.toggle("on", state.consMetrics.includes(b.dataset.m)));
+  } else {
+    consHidden[name]=!consHidden[name];
+  }
   const v=state.consumeView;
   if(v==='daily') renderConsDaily();
   else if(v==='plan') renderConsPlan();
@@ -924,8 +934,9 @@ function comboChart(cfg){
   const groupW=barW*s;
   visBars.forEach((b,k)=>{
     b.values.forEach((v,i)=>{ if(v==null) return; const cx=xc(i); const bx=cx-groupW/2+k*barW; const bh=(v/leftMax)*ih; const by=P.t+ih-bh;
-      g+=`<rect class="barclick" data-date="${dates[i]}" x="${bx}" y="${by}" width="${barW}" height="${bh}" rx="3" fill="${b.color}" opacity="0.9"><title>${b.name} ${dates[i]}: ${opt.yfmtLeft?opt.yfmtLeft(v):fmt(v)}</title></rect>`;
-      g+=`<text x="${bx+barW/2}" y="${by-5}" text-anchor="middle" fill="#1d2533" font-size="10" font-weight="600">${opt.yfmtLeft?opt.yfmtLeft(v):fmt(v)}</text>`;
+      const bfmt=b.fmt?b.fmt(v):(opt.yfmtLeft?opt.yfmtLeft(v):fmt(v));
+      g+=`<rect class="barclick" data-date="${dates[i]}" x="${bx}" y="${by}" width="${barW}" height="${bh}" rx="3" fill="${b.color}" opacity="0.9"><title>${b.name} ${dates[i]}: ${bfmt}</title></rect>`;
+      g+=`<text x="${bx+barW/2}" y="${by-5}" text-anchor="middle" fill="#1d2533" font-size="10" font-weight="600">${bfmt}</text>`;
     });
   });
   visLines.forEach(l=>{
@@ -934,7 +945,7 @@ function comboChart(cfg){
     g+=`<path d="${path}" fill="none" stroke="${l.color}" stroke-width="2.4" stroke-linejoin="round"/>`;
     l.values.forEach((v,i)=>{ if(v==null) return;
       g+=`<circle cx="${xc(i)}" cy="${yr(v)}" r="3" fill="${l.color}"/>`;
-      const lab = l.axis==='right' ? (opt.yfmtRight?opt.yfmtRight(v):fmt(v)) : (opt.yfmtLeft?opt.yfmtLeft(v):fmt(v));
+      const lab = l.fmt?l.fmt(v) : (l.axis==='right' ? (opt.yfmtRight?opt.yfmtRight(v):fmt(v)) : (opt.yfmtLeft?opt.yfmtLeft(v):fmt(v)));
       g+=`<text x="${xc(i)}" y="${yr(v)-7}" text-anchor="middle" fill="${l.color}" font-size="9" font-weight="600">${lab}</text>`;
     });
   });
@@ -1306,7 +1317,7 @@ function renderTableInto(el, rows, cols, which){
     return dir*((Number(x)||0)-(Number(y)||0));
   });
   el.innerHTML=`<div class="dtable-wrap"><table class="dtable"><thead><tr>${
-    cols.map(c=>`<th data-k="${c.k}">${c.t}</th>`).join("")
+    cols.map(c=>`<th data-k="${c.k}"${c.img?' class="img-col"':''}>${c.t}</th>`).join("")
   }</tr></thead><tbody>${
     sorted.map(r=>"<tr>"+cols.map(c=>cellHTML(r,c)).join("")+"</tr>").join("")
   }</tbody></table></div>`;
@@ -1374,7 +1385,7 @@ function renderTable(){
            `<span class="tip" style="margin:0">排序</span>`+
            `<span class="seg mini">${sortBtns}</span></span></div>`;
   html+=`<div class="dtable-wrap"><table class="dtable"><thead><tr><th class="grp-col"></th>`+
-        cols.map(c=>`<th data-k="${c.k}">${c.t}</th>`).join("")+`</tr></thead><tbody>`;
+        cols.map(c=>`<th data-k="${c.k}"${c.img?' class="img-col"':''}>${c.t}</th>`).join("")+`</tr></thead><tbody>`;
   sortedSum.forEach(o=>{
     const open = filtering ? true : !!expSet[o._key];
     html+=`<tr class="grp-row" data-key="${encodeURIComponent(o._key)}"><td class="grp-col"><span class="tw">${open?'▾':'▸'}</span></td>`;
@@ -1877,15 +1888,16 @@ function renderConsStruct(){
   html+=`<tr class="tfoot"><td>合计</td><td>${money(total)}</td><td>100%</td><td>${money(gmvTot)}</td></tr></tbody></table>`;
   tbl.innerHTML=html; hint.textContent=`${day} 当日总消耗 ${money(total)}`;
 }
-/* 2) 各计划日数据：每个计划一条「当前指标」日序列，多计划对比（指标随上方切换器同步） */
+/* 2) 各计划日数据：每个计划一条「首个激活指标」日序列，多计划对比；表格仍展示多指标 */
 function renderConsPlan(){
-  const m=state.consMetric;
+  const m=state.consMetrics[0]||"cost";
   const prows=applyFilter(consumeProductRows());
   const byPlan=groupSum(prows, r=>r.plan);
   const plans=Object.keys(byPlan).filter(p=>byPlan[p].cost>0||byPlan[p].gmv>0||byPlan[p].clk>0).sort((a,b)=>byPlan[b].cost-byPlan[a].cost);
   const tbl=document.getElementById('consPlanTable'), hint=document.getElementById('consPlanHint');
   const chart=document.getElementById('consPlanChart');
-  hint.textContent=`各计划每日「${metricName(m)}」对比 · 指标随上方切换器同步 · 范围：${state.dateFrom||'起'} ~ ${state.dateTo||'今'}`;
+  const activeNames=state.consMetrics.map(metricName).join("、");
+  hint.textContent=`各计划每日「${metricName(m)}」对比 · 当前指标：${activeNames} · 范围：${state.dateFrom||'起'} ~ ${state.dateTo||'今'}`;
   if(!plans.length){ tbl.innerHTML='<div class="muted">当前筛选下无计划消耗数据</div>'; if(chart) chart.innerHTML=''; return; }
   const dates=[...new Set(prows.map(r=>r.date))].sort();
   const f=metricFmt(m);
@@ -1923,22 +1935,40 @@ function renderConsRank(){
 }
 /* 2.5) 日数据：当前指标（合计柱/折线 + 各计划折线，可隐藏计划） */
 function renderConsDaily(){
-  const m=state.consMetric;
+  const metrics=state.consMetrics;
   const prows=applyFilter(consumeProductRows());
   const dates=[...new Set(prows.map(r=>r.date))].sort();
   const chart=document.getElementById('consDailyChart');
   if(!dates.length){ chart.innerHTML='<div class="muted">无数据</div>'; return; }
-  const f=metricFmt(m);
-  const isVol=!!METRIC_VOLUME[m];
   const byPlan=groupSum(prows, r=>r.plan);
   const plans=Object.keys(byPlan).filter(p=>byPlan[p].cost>0||byPlan[p].gmv>0||byPlan[p].clk>0).sort((a,b)=>byPlan[b].cost-byPlan[a].cost);
-  const total=dates.map(d=>metricSeries(prows.filter(r=>r.date===d),m));
-  const cfg={dates, bars:[], lines:[], opt:{yfmtLeft:f}, legendToggle:true};
-  if(isVol){
-    cfg.bars=[{name:"合计",color:"#ff6a00",values:total}];
-    cfg.lines=plans.map((p,i)=>({name:p,color:CONSUME_PAL[(i+1)%CONSUME_PAL.length],values:dates.map(d=>metricSeries(prows.filter(r=>r.date===d&&r.plan===p),m))}));
+  const cfg={dates, bars:[], lines:[], opt:{}, legendToggle:true};
+  if(metrics.length===1){
+    // 单指标：保持原逻辑（合计柱/折线 + 各计划折线）
+    const m=metrics[0];
+    const f=metricFmt(m), isVol=!!METRIC_VOLUME[m];
+    const total=dates.map(d=>metricSeries(prows.filter(r=>r.date===d),m));
+    cfg.opt.yfmtLeft=f;
+    if(isVol){
+      cfg.bars=[{name:"合计",color:"#ff6a00",values:total,fmt:f}];
+      cfg.lines=plans.map((p,i)=>({name:p,color:CONSUME_PAL[(i+1)%CONSUME_PAL.length],values:dates.map(d=>metricSeries(prows.filter(r=>r.date===d&&r.plan===p),m)),fmt:f}));
+    } else {
+      cfg.lines=[{name:"合计",color:"#ff6a00",values:total,fmt:f}].concat(plans.map((p,i)=>({name:p,color:CONSUME_PAL[(i+1)%CONSUME_PAL.length],values:dates.map(d=>metricSeries(prows.filter(r=>r.date===d&&r.plan===p),m)),fmt:f})));
+    }
   } else {
-    cfg.lines=[{name:"合计",color:"#ff6a00",values:total}].concat(plans.map((p,i)=>({name:p,color:CONSUME_PAL[(i+1)%CONSUME_PAL.length],values:dates.map(d=>metricSeries(prows.filter(r=>r.date===d&&r.plan===p),m))})));
+    // 多指标：每个指标一条折线；量类放左轴，率类放右轴；不叠加计划线避免过乱
+    metrics.forEach((m,idx)=>{
+      const isVol=!!METRIC_VOLUME[m];
+      cfg.lines.push({
+        name:metricName(m),
+        color:METRIC_COLORS[m]||CONSUME_PAL[idx%CONSUME_PAL.length],
+        axis:isVol?'left':'right',
+        values:dates.map(d=>metricSeries(prows.filter(r=>r.date===d),m)),
+        fmt:metricFmt(m)
+      });
+    });
+    cfg.opt.yfmtLeft = metrics.some(m=>METRIC_VOLUME[m] && (m==='cost'||m==='gmv')) ? money : fmt;
+    cfg.opt.yfmtRight = v=> v==null ? '—' : v.toFixed(2);
   }
   chart.innerHTML=comboChart(cfg);
 }
@@ -2731,9 +2761,13 @@ document.getElementById("consumeSeg").querySelectorAll("button").forEach(b=>b.on
   b.classList.add("on"); renderConsume();
 });
 document.getElementById("consMetricSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{
-  state.consMetric=b.dataset.m;
-  document.querySelectorAll("#consMetricSeg button").forEach(x=>x.classList.remove("on"));
-  b.classList.add("on");
+  const m=b.dataset.m;
+  if(state.consMetrics.includes(m)){
+    if(state.consMetrics.length>1) state.consMetrics=state.consMetrics.filter(x=>x!==m);
+  } else {
+    state.consMetrics.push(m);
+  }
+  document.querySelectorAll("#consMetricSeg button").forEach(x=>x.classList.toggle("on", state.consMetrics.includes(x.dataset.m)));
   if(state.consumeView==='daily') renderConsDaily();
   else if(state.consumeView==='plan') renderConsPlan();
 });

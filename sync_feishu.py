@@ -722,53 +722,96 @@ def main():
                 r["gmv"] = round(acc[1], 2)
                 r["roi"] = round(acc[1] / r["cost"], 4)  # 用计划行自身 cost 作分母，口径一致
 
+    # ---------- 主图本地化：下载到 images/ 存相对路径，规避浏览器跨域/图床防盗链导致空白 ----------
+    def ensure_local_images(pid_to_url, out_dir):
+        """把商品主图下载到 <out_dir>/images/（已存在且>500B则跳过）。
+        返回 pid -> 相对路径 images/xxx.jpg；缺失/失败 -> ""。"""
+        if not pid_to_url:
+            return {}
+        import ssl
+        img_dir = os.path.join(out_dir, "images")
+        os.makedirs(img_dir, exist_ok=True)
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE
+        result = {}; n = 0
+        for pid, url in pid_to_url.items():
+            if not url or not str(url).startswith("http"):
+                result[pid] = ""; continue
+            dest = os.path.join(img_dir, str(pid) + ".jpg")
+            if os.path.exists(dest) and os.path.getsize(dest) > 500:
+                result[pid] = "images/" + str(pid) + ".jpg"; continue
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                data = urllib.request.urlopen(req, timeout=25, context=ctx).read()
+                if len(data) < 500:
+                    result[pid] = ""; continue
+                with open(dest, "wb") as f: f.write(data)
+                result[pid] = "images/" + str(pid) + ".jpg"; n += 1
+            except Exception as e:
+                result[pid] = ""
+                print(f"    （主图下载失败 {pid}: {e}）")
+        print(f"  主图本地化: 新增 {n} 张 -> {img_dir}")
+        return result
+
     # 关联 款号 + 主图 + 商品链接：以飞书商品档案表(tbl2hYTuFFpzdmfX)为权威来源；
     # 该表为空时回退旧 Excel(商品id款号映射.xlsx / 产品主图.xlsx)，保证管道不中断。
     prodmap = build_prodmap(raw.get("prodmap"))
     if prodmap:
         print(f"  -> 商品档案映射: {len(prodmap)} 条 (产品ID→款号/主图)")
-        for r in merged:
-            if r.get("dim") == "商品" and r.get("pid"):
-                mp = prodmap.get(r["pid"])
-                if mp:
-                    if mp.get("sku"):
-                        r["sku"] = mp["sku"]
-                    if mp.get("img"):
-                        r["img"] = mp["img"]
     else:
         print("  （飞书商品档案表为空，回退 商品id款号映射.xlsx / 产品主图.xlsx）")
         for r in merged:
             if r.get("dim") == "商品" and r.get("pid") and not r.get("sku"):
                 r["sku"] = MAPPING.get(r["pid"], "")
-        img_map = ingest.load_img_map()
-        if img_map:
-            pid_set = set(r.get("pid") for r in merged if r.get("dim") == "商品" and r.get("pid"))
-            img_paths = ingest.download_images(pid_set, img_map)
-            for r in merged:
-                if r.get("dim") == "商品":
-                    r["img"] = img_paths.get(r.get("pid"), "")
-        else:
-            print("  （未找到 产品主图.xlsx，商品主图不显示）")
 
     # 二级兜底：飞书商品档案表(及旧Excel)仍未补齐的款号/主图，用「在售商品导出.xlsx」补洞
+    exp_map = {}
     try:
         exp_map = load_export_prodmap(EXPORT_PROD_XLSX)
-        if exp_map:
-            filled_sku = filled_img = 0
-            for r in merged:
-                if r.get("dim") != "商品" or not r.get("pid"):
-                    continue
-                em = exp_map.get(r["pid"])
-                if not em:
-                    continue
-                if not r.get("sku") and em.get("sku"):
-                    r["sku"] = em["sku"]; filled_sku += 1
-                if not r.get("img") and em.get("img"):
-                    r["img"] = em["img"]; filled_img += 1
-            if filled_sku or filled_img:
-                print(f"  -> 在售商品导出表补洞: 款号 {filled_sku} 个, 主图 {filled_img} 个")
     except Exception as e:
-        print(f"  （在售商品导出表补洞失败，已跳过: {e}）")
+        print(f"  （在售商品导出表读取失败，已跳过: {e}）")
+
+    # 收集每个商品的「主图URL」用于本地化下载（权威来源优先，导出表兜底）
+    img_url_map = {}
+    if prodmap:
+        for r in merged:
+            if r.get("dim") == "商品" and r.get("pid"):
+                pid = r["pid"]
+                if pid in img_url_map:
+                    continue
+                mp = prodmap.get(pid)
+                if mp and mp.get("img"):
+                    img_url_map[pid] = mp["img"]
+    if exp_map:
+        for r in merged:
+            if r.get("dim") == "商品" and r.get("pid"):
+                pid = r["pid"]
+                if pid in img_url_map:
+                    continue
+                em = exp_map.get(pid)
+                if em and em.get("img"):
+                    img_url_map[pid] = em["img"]
+    # 统一下载到本地 images/，data.js 存相对路径（同源，浏览器可稳定加载）
+    local_img = ensure_local_images(img_url_map, OUT_DIR)
+
+    # 回填 款号 + 主图(相对路径)
+    filled_sku = filled_img = 0
+    for r in merged:
+        if r.get("dim") != "商品" or not r.get("pid"):
+            continue
+        pid = r["pid"]
+        if prodmap:
+            mp = prodmap.get(pid)
+            if mp and mp.get("sku") and not r.get("sku"):
+                r["sku"] = mp["sku"]; filled_sku += 1
+        if exp_map:
+            em = exp_map.get(pid)
+            if em and em.get("sku") and not r.get("sku"):
+                r["sku"] = em["sku"]; filled_sku += 1
+        r["img"] = local_img.get(pid, "")
+        if r["img"]:
+            filled_img += 1
+    print(f"  -> 款号回填 {filled_sku} 个，主图(本地) {filled_img} 个")
 
     # 商品异常统计（按唯一 产品ID 计，缺款号/缺主图），供前端 banner 提示
     anomaly = {"products_missing_sku": 0, "products_missing_img": 0,

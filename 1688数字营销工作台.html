@@ -1724,10 +1724,16 @@ function renderTarget(){
   };
   /* 分组宽度按卡片数分配（--w），组内列数按卡片数（--n）→ 各组卡片宽度一致，整行不留孤卡 */
   const renderGroup=(title, arr)=> `<div class="tkpi-group" style="--w:${arr.length}"><div class="tkpi-group-title">${title}</div><div class="tkpi-row" style="--n:${arr.length}">${arr.map(c=>`<div class="tkpi"><div class="t">${c.t}</div><div class="v${c.c?' '+c.c:''}">${c.v}</div><div class="d">${c.d||''}</div></div>`).join('')}</div></div>`;
-  // 昨日实绩：取「数据最新日」的上一个有效数据日
+  // 昨日实绩：取「严格早于今天」的最近一个有效数据日；
+  // 飞书每日同步后，最新有数日即昨天(如 8.19)；若数据已含当天(8.20)则取上一天，避免把未完成的"今天"当昨日
   const rateTxt=r=> r==null? '—' : (typeof r==='number'? r.toFixed(0):r)+'%';
+  const todayLocal=()=>{const d=new Date();const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());};
   const dataRows = T.filter(r=>(Number(r.actSales)||0)>0 || (Number(r.actPromo)||0)>0);
-  const yRow = dataRows.length>=2 ? dataRows[dataRows.length-2] : null;
+  const _tS=todayLocal();
+  let yRow=null;
+  for(let i=dataRows.length-1;i>=0;i--){ if(dataRows[i].date < _tS){ yRow=dataRows[i]; break; } }
+  if(!yRow && dataRows.length>=2) yRow=dataRows[dataRows.length-2];
+  if(!yRow && dataRows.length===1) yRow=dataRows[0];
   let yHtml='';
   if(yRow){
     const yCards=[

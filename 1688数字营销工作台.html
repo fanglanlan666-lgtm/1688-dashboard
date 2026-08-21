@@ -70,11 +70,11 @@
   /* 商品主图 */
   .thumb{width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#f4f6fa;display:block}
   .thumb-wrap{display:flex;align-items:center;gap:8px}
-  /* 明细表：主图列收窄、与款号紧贴；表头 th 也要同 td 一起约束宽度，否则列头会撑开空隙 */
-  .dtable td.img-col,.dtable th.img-col{padding:4px 2px 4px 4px;width:1%;white-space:nowrap}
-  .dtable td.img-col+td,.dtable th.img-col+th{padding-left:4px}
-  /* 款号列：左对齐并收紧到内容宽度，避免右对齐+宽列把文字推远、产生主图与款号的大空隙 */
-  .dtable th.sku-col,.dtable td.sku-col{text-align:left;white-space:nowrap;width:1%;padding-left:4px}
+  /* 明细表：主图/款号/商品ID 三列统一紧凑——左对齐、贴内容宽度、左右各 4px，
+     消除「主图↔款号↔商品ID」之间被默认 11px 内边距撑出的多余空隙（三列用同一套规则，间距一致） */
+  .dtable td.img-col,.dtable th.img-col,.dtable td.sku-col,.dtable th.sku-col,
+  .dtable td.pid-col,.dtable th.pid-col{
+    text-align:left;white-space:nowrap;width:1%;padding:4px 4px}
   .dtable td.ai-cell{text-align:left;white-space:normal;line-height:1.45;vertical-align:top;min-width:220px}
   /* Progress */
   .barwrap{height:13px;background:#eef1f6;border-radius:8px;overflow:hidden;margin:10px 0 6px}
@@ -1286,6 +1286,7 @@ function cellHTML(r,c){
   if(c.k==="ai") return `<td class="ai-cell">${v==null||v===""?"—":v}</td>`;
   if(c.k==="title") return `<td class="title-cell">${v==null||v===""?"—":v}</td>`;
   if(c.k==="sku") return `<td class="sku-col">${v==null||v===""?"—":v}</td>`;
+  if(c.k==="pid") return `<td class="pid-col">${v==null||v===""?"—":v}</td>`;
   if(v==null||v==="") return `<td>—</td>`;
   return `<td>${c.f?c.f(v):v}</td>`;
 }
@@ -1322,7 +1323,7 @@ function renderTableInto(el, rows, cols, which){
     return dir*((Number(x)||0)-(Number(y)||0));
   });
   el.innerHTML=`<div class="dtable-wrap"><table class="dtable"><thead><tr>${
-    cols.map(c=>`<th data-k="${c.k}"${c.img?' class="img-col"':c.k==='sku'?' class="sku-col"':''}>${c.t}</th>`).join("")
+    cols.map(c=>`<th data-k="${c.k}"${c.img?' class="img-col"':c.k==='sku'?' class="sku-col"':c.k==='pid'?' class="pid-col"':''}>${c.t}</th>`).join("")
   }</tr></thead><tbody>${
     sorted.map(r=>"<tr>"+cols.map(c=>cellHTML(r,c)).join("")+"</tr>").join("")
   }</tbody></table></div>`;
@@ -1390,7 +1391,7 @@ function renderTable(){
            `<span class="tip" style="margin:0">排序</span>`+
            `<span class="seg mini">${sortBtns}</span></span></div>`;
   html+=`<div class="dtable-wrap"><table class="dtable"><thead><tr><th class="grp-col"></th>`+
-        cols.map(c=>`<th data-k="${c.k}"${c.img?' class="img-col"':c.k==='sku'?' class="sku-col"':''}>${c.t}</th>`).join("")+`</tr></thead><tbody>`;
+        cols.map(c=>`<th data-k="${c.k}"${c.img?' class="img-col"':c.k==='sku'?' class="sku-col"':c.k==='pid'?' class="pid-col"':''}>${c.t}</th>`).join("")+`</tr></thead><tbody>`;
   sortedSum.forEach(o=>{
     const open = filtering ? true : !!expSet[o._key];
     html+=`<tr class="grp-row" data-key="${encodeURIComponent(o._key)}"><td class="grp-col"><span class="tw">${open?'▾':'▸'}</span></td>`;

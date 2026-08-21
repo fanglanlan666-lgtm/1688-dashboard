@@ -359,6 +359,13 @@ def build_records(raw, meta):
                 continue
             if zh in r and r[zh] is not None and str(r[zh]).strip() != "":
                 rec[en] = ingest.to_float(r[zh])
+        # 大客方案商品表另有「解决方案重点品消耗量」列，是与「消耗量」并列的独立花费桶，
+        # 需并入总消耗(cost)，否则大客方案消耗会被少算约一半（飞书两列各自有独立数值）。
+        _KEY_COST_EXTRA = "解决方案重点品消耗量"
+        if r.get(_KEY_COST_EXTRA) not in (None, ""):
+            _extra = ingest.to_float(r.get(_KEY_COST_EXTRA)) or 0
+            if _extra:
+                rec["cost"] = (rec.get("cost") or 0) + _extra
         if dim == "商品":
             rec["sku"] = (MAPPING or {}).get(rec["pid"], "")
         # 派生
@@ -762,6 +769,27 @@ def main():
                 r["gmv"] = round(acc[1], 2)
                 r["roi"] = round(acc[1] / r["cost"], 4)  # 用计划行自身 cost 作分母，口径一致
 
+    # ===== 大客方案消耗口径修正 =====
+    # 大客方案商品表含「解决方案重点品消耗量」独立花费桶，已并入各商品 cost（见 build_records）。
+    # 但计划表「解决方案」行、总览表均无此列，故用【商品级 cost 反推】大客方案的计划级消耗，
+    # 使「商品合计 = 计划级 = 总览」三者口径统一。其余计划（全站推店等）仍沿用计划表原值，
+    # 避免误伤——例如全站推店商品级之和恰为计划表的 2 倍，不能直接反推。
+    dk_cost = {}
+    for r in merged:
+        if r.get("dim") == "商品" and r.get("plan") == "大客方案" and r.get("cost"):
+            dk_cost[r["date"]] = dk_cost.get(r["date"], 0.0) + float(r["cost"])
+    other_plan_cost = {}
+    for r in merged:
+        if r.get("dim") == "计划" and r.get("plan") != "大客方案" and r.get("cost"):
+            other_plan_cost[r["date"]] = other_plan_cost.get(r["date"], 0.0) + float(r["cost"])
+    for r in merged:
+        if r.get("dim") == "计划" and r.get("plan") == "大客方案" and r["date"] in dk_cost:
+            r["cost"] = round(dk_cost[r["date"]], 2)
+        elif r.get("dim") == "总览":
+            tot = dk_cost.get(r["date"], 0.0) + other_plan_cost.get(r["date"], 0.0)
+            if tot:
+                r["cost"] = round(tot, 2)
+
     # ---------- 主图本地化：下载到 images/ 存相对路径，规避浏览器跨域/图床防盗链导致空白 ----------
     def ensure_local_images(pid_to_url, out_dir):
         """把商品主图下载到 <out_dir>/images/（已存在且>500B则跳过）。
@@ -928,11 +956,14 @@ def main():
         prefix, existing = load_existing_data_js(OUT_JS)
         if prefix is not None:
             kept = [r for r in existing if r.get("date") != target_date]
-            merged_all = kept + js_rows
+            # 增量模式只替换目标日：js_rows 来自整表拉取(含全部日期)，必须筛到目标日再合并，
+            # 否则非目标日会被整段复制成双份，导致消耗等被翻倍。
+            js_rows_target = [r for r in js_rows if r.get("date") == target_date]
+            merged_all = kept + js_rows_target
             merged_all.sort(key=lambda x: (x.get("date") or "", x.get("dim") or "", x.get("plan") or "", str(x.get("pid") or "")))
             with open(OUT_JS, "w", encoding="utf-8") as f:
                 f.write(prefix + 'window.DASHBOARD_DATA = ' + json.dumps(merged_all, ensure_ascii=False) + ';\n')
-            print(f"完成（增量 {target_date}）：保留 {len(kept)} 条，新增 {len(js_rows)} 条，共 {len(merged_all)} 条 -> data.js")
+            print(f"完成（增量 {target_date}）：保留 {len(kept)} 条，替换 {len(js_rows_target)} 条，共 {len(merged_all)} 条 -> data.js")
             return
         print("  （未找到现有 data.js，回退到全量写入）")
 

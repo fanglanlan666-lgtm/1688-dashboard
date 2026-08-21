@@ -73,6 +73,8 @@
   /* 明细表：主图列收窄、与款号紧贴；表头 th 也要同 td 一起约束宽度，否则列头会撑开空隙 */
   .dtable td.img-col,.dtable th.img-col{padding:4px 2px 4px 4px;width:1%;white-space:nowrap}
   .dtable td.img-col+td,.dtable th.img-col+th{padding-left:4px}
+  /* 款号列：左对齐并收紧到内容宽度，避免右对齐+宽列把文字推远、产生主图与款号的大空隙 */
+  .dtable th.sku-col,.dtable td.sku-col{text-align:left;white-space:nowrap;width:1%;padding-left:4px}
   .dtable td.ai-cell{text-align:left;white-space:normal;line-height:1.45;vertical-align:top;min-width:220px}
   /* Progress */
   .barwrap{height:13px;background:#eef1f6;border-radius:8px;overflow:hidden;margin:10px 0 6px}
@@ -287,6 +289,7 @@
     <button data-view="weather">🌤 气温趋势</button>
     <button data-view="insight">📊 经营洞察</button>
     <button id="btnSync" class="sync-btn"><span class="sync-dot"></span><span class="sync-txt">数据更新</span></button>
+    <button id="btnSyncYest" class="sync-btn" style="margin-left:8px"><span class="sync-dot"></span><span class="sync-txt">更新前一日</span></button>
   </div>
 
   <!-- 数据异常提醒横幅（条件显示） -->
@@ -1282,6 +1285,7 @@ function cellHTML(r,c){
   if(c.roi) return `<td>${roiTag(v)}</td>`;
   if(c.k==="ai") return `<td class="ai-cell">${v==null||v===""?"—":v}</td>`;
   if(c.k==="title") return `<td class="title-cell">${v==null||v===""?"—":v}</td>`;
+  if(c.k==="sku") return `<td class="sku-col">${v==null||v===""?"—":v}</td>`;
   if(v==null||v==="") return `<td>—</td>`;
   return `<td>${c.f?c.f(v):v}</td>`;
 }
@@ -1318,7 +1322,7 @@ function renderTableInto(el, rows, cols, which){
     return dir*((Number(x)||0)-(Number(y)||0));
   });
   el.innerHTML=`<div class="dtable-wrap"><table class="dtable"><thead><tr>${
-    cols.map(c=>`<th data-k="${c.k}"${c.img?' class="img-col"':''}>${c.t}</th>`).join("")
+    cols.map(c=>`<th data-k="${c.k}"${c.img?' class="img-col"':c.k==='sku'?' class="sku-col"':''}>${c.t}</th>`).join("")
   }</tr></thead><tbody>${
     sorted.map(r=>"<tr>"+cols.map(c=>cellHTML(r,c)).join("")+"</tr>").join("")
   }</tbody></table></div>`;
@@ -1386,7 +1390,7 @@ function renderTable(){
            `<span class="tip" style="margin:0">排序</span>`+
            `<span class="seg mini">${sortBtns}</span></span></div>`;
   html+=`<div class="dtable-wrap"><table class="dtable"><thead><tr><th class="grp-col"></th>`+
-        cols.map(c=>`<th data-k="${c.k}"${c.img?' class="img-col"':''}>${c.t}</th>`).join("")+`</tr></thead><tbody>`;
+        cols.map(c=>`<th data-k="${c.k}"${c.img?' class="img-col"':c.k==='sku'?' class="sku-col"':''}>${c.t}</th>`).join("")+`</tr></thead><tbody>`;
   sortedSum.forEach(o=>{
     const open = filtering ? true : !!expSet[o._key];
     html+=`<tr class="grp-row" data-key="${encodeURIComponent(o._key)}"><td class="grp-col"><span class="tw">${open?'▾':'▸'}</span></td>`;
@@ -2844,9 +2848,12 @@ document.querySelectorAll(".topnav button").forEach(b=>b.onclick=()=>{
 
 /* 「数据更新」按钮：本地联动模式下从飞书一键拉最新数据 */
 (function(){
-  const btnSync = document.getElementById('btnSync');
+  const btns = {
+    sync: document.getElementById('btnSync'),
+    yest: document.getElementById('btnSyncYest')
+  };
   const banner = document.getElementById('syncBanner');
-  if(!btnSync) return;
+  if(!btns.sync) return;
   // 云端部署时，把下面这串与 server_cloud.js 的 SYNC_TOKEN 环境变量设为相同随机值；
   // 本地（启动看板.bat）留空即可，server 不校验令牌。
   const SYNC_TOKEN = "";
@@ -2862,10 +2869,10 @@ document.querySelectorAll(".topnav button").forEach(b=>b.onclick=()=>{
     banner.querySelector('.sb-close').onclick = () => { banner.style.display='none'; };
     if(autoHide) setTimeout(() => { if(banner) banner.style.display='none'; }, autoHide);
   }
-  function setBtnState(state, label){
-    btnSync.classList.remove('ready','offline','syncing');
-    if(state) btnSync.classList.add(state);
-    const lbl = btnSync.querySelector('.sync-txt');
+  function setBtnState(btn, state, label){
+    btn.classList.remove('ready','offline','syncing');
+    if(state) btn.classList.add(state);
+    const lbl = btn.querySelector('.sync-txt');
     if(lbl && label) lbl.textContent = label;
   }
   async function probe(){
@@ -2873,43 +2880,50 @@ document.querySelectorAll(".topnav button").forEach(b=>b.onclick=()=>{
     // 本地 bat / 云服务器 -> 200 -> 就绪；file:// 或纯静态线上链接 -> 失败 -> 离线
     try {
       const r = await fetch('/api/sync', { method:'GET', cache:'no-store', headers: syncHeaders() });
-      if(r.ok){ setBtnState('ready','数据更新'); return true; }
+      if(r.ok){
+        setBtnState(btns.sync, 'ready','数据更新');
+        if(btns.yest) setBtnState(btns.yest, 'ready','更新前一日');
+        return true;
+      }
     } catch(e){}
-    setBtnState('offline','同步服务未连接');
+    setBtnState(btns.sync, 'offline','同步服务未连接');
+    if(btns.yest) setBtnState(btns.yest, 'offline','同步服务未连接');
     return false;
   }
   // 页面加载后探测一次；如果已经是 localhost，也允许用户随时点击重试
   probe();
 
-  btnSync.onclick = async () => {
-    if (btnSync.disabled) return;
+  async function doSync(btn, url, orig){
+    if (btn.disabled) return;
     const ready = await probe();
     if(!ready){
-      showBanner('<b>同步服务未连接</b>：点「数据更新」需要一个能访问飞书的同步后端。' +
+      showBanner('<b>同步服务未连接</b>：点「' + orig + '」需要一个能访问飞书的同步后端。' +
         '本机请双击 <code>启动看板.bat</code> 后使用自动打开的 <code>http://localhost:8787</code>；' +
         '线上请使用你自建云服务器提供的地址。');
       return;
     }
-    const orig = '数据更新';
-    btnSync.disabled = true;
-    setBtnState('syncing','同步中…');
+    btn.disabled = true;
+    setBtnState(btn, 'syncing','同步中…');
     try {
-      const resp = await fetch('/api/sync', { method: 'POST', headers: syncHeaders() });
+      const resp = await fetch(url, { method: 'POST', headers: syncHeaders() });
       let data = {};
       try { data = await resp.json(); } catch(e) {}
       if (resp.ok && data.ok) {
-        showBanner('<b>✅ 同步成功</b>：已从飞书多维表拉取最新数据，页面即将自动刷新…', 4000);
+        showBanner('<b>✅ 同步成功</b>：' + (data.msg || '已刷新数据') + '，页面即将自动刷新…', 4000);
         setTimeout(() => location.reload(), 1200);
       } else {
-        setBtnState('ready', orig); btnSync.disabled = false;
+        setBtnState(btn, 'ready', orig); btn.disabled = false;
         showBanner('<b>同步未成功</b>：' + (data.msg || ('HTTP ' + resp.status)) +
           (data.log ? '<br><code>' + String(data.log).slice(0,400).replace(/\n/g,'<br>') + '</code>' : ''));
       }
     } catch (e) {
-      setBtnState('ready', orig); btnSync.disabled = false;
+      setBtnState(btn, 'ready', orig); btn.disabled = false;
       showBanner('<b>同步请求失败</b>：' + e.message + '。请确认同步服务仍在运行（本机 <code>启动看板.bat</code> 窗口未关闭，或云服务器进程存活）。');
     }
-  };
+  }
+
+  btns.sync.onclick = () => doSync(btns.sync, '/api/sync', '数据更新');
+  if(btns.yest) btns.yest.onclick = () => doSync(btns.yest, '/api/sync-yesterday', '更新前一日');
 })();
 document.getElementById('exWeekly').onclick=()=>exportReportCSV('weeklyBody','推广周报.csv');
 document.getElementById('exMonthly').onclick=()=>exportReportCSV('monthlyBody','推广月报_汇总.csv');

@@ -116,6 +116,44 @@ function handleSync(res) {
   step();
 }
 
+function handleSyncYesterday(res) {
+  if (syncing) {
+    res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+    return res.end(JSON.stringify({ ok: false, msg: '同步进行中，请稍候…' }));
+  }
+  syncing = true;
+  const env = Object.assign({}, process.env, {
+    PYTHONPATH: process.env.PYTHONPATH || '',
+    DATA_OUT_DIR: process.env.DATA_OUT_DIR || ROOT
+  });
+  // 按北京时间取昨天
+  const now = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const ymd = yesterday.toISOString().slice(0, 10);
+  const cmd = [PY, 'sync_feishu.py', '--date', ymd];
+  const p = spawn(cmd[0], cmd.slice(1), { cwd: ROOT, env: env, windowsHide: true });
+  let out = '', err = '';
+  p.stdout.on('data', d => { out += d; });
+  p.stderr.on('data', d => { err += d; });
+  p.on('error', e => {
+    syncing = false;
+    res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: false, msg: '无法启动同步进程：' + e.message, log: err }));
+  });
+  p.on('close', code => {
+    syncing = false;
+    const log = `[${cmd.join(' ')}] -> exit ${code}\n` + (code === 0 ? out : err);
+    if (code !== 0) {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: false, msg: '前一日数据同步失败（退出码 ' + code + '）', log: log.slice(-1800) }));
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: true, msg: `已增量更新 ${ymd} 数据（其余日期保留）`, log: log.slice(-1800) }));
+  });
+}
+
 const server = http.createServer((req, res) => {
   const u = (req.url || '/').split('?')[0];
 
@@ -137,6 +175,14 @@ const server = http.createServer((req, res) => {
       return res.end(JSON.stringify({ ok: false, msg: 'SYNC_TOKEN 校验失败' }));
     }
     return handleSync(res);
+  }
+
+  if (u === '/api/sync-yesterday' && req.method === 'POST') {
+    if (SYNC_TOKEN && (req.headers['x-sync-token'] || '') !== SYNC_TOKEN) {
+      res.writeHead(403, Object.assign({ 'Content-Type': 'application/json; charset=utf-8' }, corsHeaders()));
+      return res.end(JSON.stringify({ ok: false, msg: 'SYNC_TOKEN 校验失败' }));
+    }
+    return handleSyncYesterday(res);
   }
 
   if (u.startsWith('/api/')) {

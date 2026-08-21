@@ -388,6 +388,27 @@ def ffirst(r, keys):
             return v
     return None
 
+def load_existing_data_js(path):
+    """读取现有 data.js，返回 (prefix, rows)。prefix 包含 DASHBOARD_DATA 之前的所有 window.* 语句。
+    文件不存在或格式不符时返回 (None, [])。"""
+    if not os.path.exists(path):
+        return None, []
+    with open(path, encoding="utf-8") as f:
+        txt = f.read()
+    marker = 'window.DASHBOARD_DATA ='
+    idx = txt.find(marker)
+    if idx < 0:
+        return None, []
+    prefix = txt[:idx]
+    js = txt[idx + len(marker):].strip()
+    if js.endswith(';'):
+        js = js[:-1]
+    try:
+        rows = json.loads(js)
+        return prefix, rows
+    except Exception:
+        return None, []
+
 def build_prodmap(rows):
     """tbl2hYTuFFpzdmfX（商品档案）→ {产品ID: {sku, img, link}}。
     作为商品维度「款号 + 主图」的权威来源，替代旧 Excel 映射(商品id款号映射.xlsx/产品主图.xlsx)。
@@ -659,9 +680,28 @@ def build_calendar(weather_raw, dw_raw):
 def main():
     global MAPPING
     dry = "--dry" in sys.argv
-    print("== 飞书多维表同步 ==")
+    target_date = None
+    for i, arg in enumerate(sys.argv):
+        if arg == "--date" and i + 1 < len(sys.argv):
+            target_date = sys.argv[i + 1]
+    date_mode = bool(target_date)
+    print("== 飞书多维表同步 ==" + (f"（仅 {target_date}）" if date_mode else "（全量）"))
     MAPPING = ingest.load_mapping()  # 商品ID -> 款号
-    raw = {k: fetch_table(v["id"]) for k, v in TABLES.items()}
+
+    # 增量模式只拉取每日推广相关表 + 商品档案；跳过天气/周/聚水潭/生意参谋以提速
+    if date_mode:
+        fetch_keys = ["summary", "plan", "product", "tuidian", "prodmap"]
+    else:
+        fetch_keys = list(TABLES.keys())
+
+    raw = {}
+    for k in fetch_keys:
+        raw[k] = fetch_table(TABLES[k]["id"])
+    # 对未拉取的表补空列表，避免后续 KeyError
+    for k in TABLES:
+        if k not in raw:
+            raw[k] = []
+
     for k, v in raw.items():
         print(f"  {k}: {len(v)} 行")
 
@@ -883,6 +923,19 @@ def main():
             print("  ⚠️ budget.json 读取失败:", e)
 
     OUT_JS = os.path.join(OUT_DIR, "data.js")
+
+    if date_mode:
+        prefix, existing = load_existing_data_js(OUT_JS)
+        if prefix is not None:
+            kept = [r for r in existing if r.get("date") != target_date]
+            merged_all = kept + js_rows
+            merged_all.sort(key=lambda x: (x.get("date") or "", x.get("dim") or "", x.get("plan") or "", str(x.get("pid") or "")))
+            with open(OUT_JS, "w", encoding="utf-8") as f:
+                f.write(prefix + 'window.DASHBOARD_DATA = ' + json.dumps(merged_all, ensure_ascii=False) + ';\n')
+            print(f"完成（增量 {target_date}）：保留 {len(kept)} 条，新增 {len(js_rows)} 条，共 {len(merged_all)} 条 -> data.js")
+            return
+        print("  （未找到现有 data.js，回退到全量写入）")
+
     anomaly_js = "window.DASHBOARD_ANOMALY = " + json.dumps(anomaly, ensure_ascii=False) + ";\n"
     with open(OUT_JS, "w", encoding="utf-8") as f:
         f.write(anomaly_js + budget_js + cal_js + weather_js + jst_js + sygc_js + jstsku_js + sygcsku_js +

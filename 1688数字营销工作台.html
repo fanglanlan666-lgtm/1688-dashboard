@@ -72,9 +72,14 @@
   .thumb-wrap{display:flex;align-items:center;gap:8px}
   /* 明细表：主图/款号/商品ID 三列统一紧凑——左对齐、贴内容宽度、左右各 4px，
      消除「主图↔款号↔商品ID」之间被默认 11px 内边距撑出的多余空隙（三列用同一套规则，间距一致） */
+  /* 明细表：主图/款号/商品ID 三列统一紧凑——左对齐、nowrap、4px 内边距；
+     款号/商品ID 再用 max-width 限制列宽，并用省略号隐藏超长内容（hover title 可看完整值），
+     避免 HTML 表格按“本列最长内容”撑出大片右侧留白，导致短内容行里列与列之间视觉空隙过大。 */
   .dtable td.img-col,.dtable th.img-col,.dtable td.sku-col,.dtable th.sku-col,
   .dtable td.pid-col,.dtable th.pid-col{
-    text-align:left;white-space:nowrap;width:1%;padding:4px 4px}
+    text-align:left;white-space:nowrap;padding:4px 4px}
+  .dtable td.sku-col,.dtable th.sku-col{max-width:80px;overflow:hidden;text-overflow:ellipsis}
+  .dtable td.pid-col,.dtable th.pid-col{max-width:105px;overflow:hidden;text-overflow:ellipsis}
   .dtable td.ai-cell{text-align:left;white-space:normal;line-height:1.45;vertical-align:top;min-width:220px}
   /* Progress */
   .barwrap{height:13px;background:#eef1f6;border-radius:8px;overflow:hidden;margin:10px 0 6px}
@@ -1285,8 +1290,8 @@ function cellHTML(r,c){
   if(c.roi) return `<td>${roiTag(v)}</td>`;
   if(c.k==="ai") return `<td class="ai-cell">${v==null||v===""?"—":v}</td>`;
   if(c.k==="title") return `<td class="title-cell">${v==null||v===""?"—":v}</td>`;
-  if(c.k==="sku") return `<td class="sku-col">${v==null||v===""?"—":v}</td>`;
-  if(c.k==="pid") return `<td class="pid-col">${v==null||v===""?"—":v}</td>`;
+  if(c.k==="sku") return `<td class="sku-col" title="${v==null||v===""?"":v}">${v==null||v===""?"—":v}</td>`;
+  if(c.k==="pid") return `<td class="pid-col" title="${v==null||v===""?"":v}">${v==null||v===""?"—":v}</td>`;
   if(v==null||v==="") return `<td>—</td>`;
   return `<td>${c.f?c.f(v):v}</td>`;
 }

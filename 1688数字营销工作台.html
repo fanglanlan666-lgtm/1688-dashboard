@@ -1286,7 +1286,7 @@ function roiTag(v){
 }
 function cellHTML(r,c){
   const v=r[c.k];
-  if(c.img) return r.img? `<td class="img-col"><img class="thumb" src="${r.img}" loading="lazy" onerror="this.style.display='none'"></td>` : `<td class="img-col">—</td>`;
+  if(c.img) return r.img? `<td class="img-col"><img class="thumb" src="${r.img}" loading="lazy" decoding="async" onerror="this.style.display='none'"></td>` : `<td class="img-col">—</td>`;
   if(c.roi) return `<td>${roiTag(v)}</td>`;
   if(c.k==="ai") return `<td class="ai-cell">${v==null||v===""?"—":v}</td>`;
   if(c.k==="title") return `<td class="title-cell">${v==null||v===""?"—":v}</td>`;

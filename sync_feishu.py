@@ -763,6 +763,26 @@ def main():
                 r["roi"] = round(acc[1] / r["cost"], 4)  # 用计划行自身 cost 作分母，口径一致
 
     # ---------- 主图本地化：下载到 images/ 存相对路径，规避浏览器跨域/图床防盗链导致空白 ----------
+    def _compress_image(path, long_edge=160, quality=82):
+        """下载后立即压成缩略图（长边~160px, quality 82），明细表仅 42px 显示；
+        避免存储/加载原图(常达 0.5~1MB)导致看板主图加载缓慢。无 Pillow 环境则保留原图。"""
+        try:
+            from PIL import Image
+        except Exception:
+            return
+        try:
+            if os.path.getsize(path) < 500:
+                return
+            with Image.open(path) as im:
+                im = im.convert("RGB")
+                w, h = im.size
+                if max(w, h) > long_edge:
+                    s = long_edge / float(max(w, h))
+                    im = im.resize((max(1, int(w * s)), max(1, int(h * s))), Image.LANCZOS)
+                im.save(path, "JPEG", quality=quality, optimize=True, progressive=True)
+        except Exception as e:
+            print(f"    （主图压缩跳过 {os.path.basename(path)}: {e}）")
+
     def ensure_local_images(pid_to_url, out_dir):
         """把商品主图下载到 <out_dir>/images/（已存在且>500B则跳过）。
         返回 pid -> 相对路径 images/xxx.jpg；缺失/失败 -> ""。"""
@@ -786,6 +806,7 @@ def main():
                 if len(data) < 500:
                     result[pid] = ""; continue
                 with open(dest, "wb") as f: f.write(data)
+                _compress_image(dest)  # 下载即压缩，避免加载原图过慢
                 result[pid] = "images/" + str(pid) + ".jpg"; n += 1
             except Exception as e:
                 result[pid] = ""

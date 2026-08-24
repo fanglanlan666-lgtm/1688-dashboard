@@ -1054,6 +1054,15 @@ function loadBudget(){
   state.planBudgets={};
 }
 function budgetTotal(){ return Object.values(state.planBudgets).reduce((s,v)=>s+(Number(v)||0),0); }
+/* 本月剩余可投放天数（含今天）：用于「建议日预算 = 剩余预算 / 剩余天数」。
+   今天落在预算月内 → 月底日 − 今天 + 1；预算月是未来月 → 整月；过去月 → 0 */
+function remainingDaysOfMonth(){
+  const today=new Date(), tY=today.getFullYear(), tM=today.getMonth()+1, tD=today.getDate();
+  const lastDay=new Date(state.budgetYear, state.budgetMonth, 0).getDate();
+  if(tY!==state.budgetYear || tM!==state.budgetMonth)
+    return (tY<state.budgetYear || (tY===state.budgetYear && tM<state.budgetMonth)) ? lastDay : 0;
+  return Math.max(0, lastDay - tD + 1);
+}
 function renderBudgetSettings(){
   const plans=[...new Set(dimRows("计划").map(r=>r.plan))].filter(p=>p && p!=="全部").sort();
   const box=document.getElementById("planBudgets");
@@ -1079,7 +1088,8 @@ function renderBudget(){
   if(tb>0){
     const r=Math.min(totalCost/tb,1), over=totalCost>tb;
     html+=`<div style="margin-bottom:12px"><div class="barwrap"><div class="barfill ${over?'over':''}" style="width:${(r*100).toFixed(1)}%"></div></div>`+
-      `<div class="progress-txt"><b>总预算（${curK}）</b> 已消耗 <b>${money(totalCost)}</b> / ${money(tb)}（<b>${(totalCost/tb*100).toFixed(1)}%</b>${over?'，<span class="up">⚠️ 超支 '+money(totalCost-tb)+'</span>':'，剩余 '+money(tb-totalCost)}）</div></div>`;
+      `<div class="progress-txt"><b>总预算（${curK}）</b> 已消耗 <b>${money(totalCost)}</b> / ${money(tb)}（<b>${(totalCost/tb*100).toFixed(1)}%</b>${over?'，<span class="up">⚠️ 超支 '+money(totalCost-tb)+'</span>':'，剩余 '+money(tb-totalCost)}）</div>`+
+      `<div style="margin-top:3px;font-size:12px;color:var(--sub)">剩余预算 <b style="color:var(--text)">${money(Math.max(tb-totalCost,0))}</b> · 剩余 <b style="color:var(--text)">${remainingDaysOfMonth()}</b> 天（至月底） · <span style="color:var(--orange);font-weight:700">建议日预算 ¥${Math.round(remainingDaysOfMonth()>0?(tb-totalCost)/remainingDaysOfMonth():0).toLocaleString()}</span></div></div>`;
   }
   const plans=Object.keys(state.planBudgets).filter(p=>(state.planBudgets[p]||0)>0);
   if(plans.length){
@@ -1088,8 +1098,11 @@ function renderBudget(){
       const pc=sum(rows.filter(r=>r.plan===p),"cost");
       const pb=state.planBudgets[p];
       const r=Math.min(pc/pb,1), over=pc>pb;
+      const remain=pb-pc, dl=remainingDaysOfMonth();
+      const sug=remain>0 && dl>0 ? remain/dl : 0;
       html+=`<div style="margin:8px 0"><div class="barwrap" style="margin:4px 0"><div class="barfill ${over?'over':''}" style="width:${(r*100).toFixed(1)}%"></div></div>`+
-        `<div class="progress-txt">${p}：已消耗 <b>${money(pc)}</b> / ${money(pb)}（<b>${(pc/pb*100).toFixed(1)}%</b>${over?'，<span class="up">超支 '+money(pc-pb)+'</span>':'，剩余 '+money(pb-pc)}）</div></div>`;
+        `<div class="progress-txt">${p}：已消耗 <b>${money(pc)}</b> / ${money(pb)}（<b>${(pc/pb*100).toFixed(1)}%</b>${over?'，<span class="up">超支 '+money(pc-pb)+'</span>':'，剩余 '+money(remain)}）</div>`+
+        `<div style="margin-top:3px;font-size:12px;color:var(--sub)">剩余预算 <b style="color:var(--text)">${money(Math.max(remain,0))}</b> · 剩余 <b style="color:var(--text)">${dl}</b> 天（至月底） · <span style="color:var(--orange);font-weight:700">建议日预算 ¥${Math.round(sug).toLocaleString()}</span>${remain<=0?'（已超支，建议先追加预算）':''}</div></div>`;
     });
   }
   /* —— 预算执行 AI：结合消耗趋势估算还能撑几天 —— */
@@ -1113,7 +1126,7 @@ function renderBudget(){
       const remain=tb-totalCost;
       const lastDay=new Date(state.budgetYear,state.budgetMonth,0).getDate();
       const ld=Number(latest.split('-')[2]);
-      const daysLeftMonth=lastDay-ld; // 本月剩余天数（不含 latest 当天）
+      const daysLeftMonth=remainingDaysOfMonth(); // 本月剩余天数（含今天，与建议日预算一致）
       const trendNote=`整体日均 ${money(avg)}，近3日 ${money(avg3)}，近7日 ${money(avg7)} → ${trendTxt}`;
       if(remain<=0){
         const overAmt=totalCost-tb;
@@ -1121,7 +1134,7 @@ function renderBudget(){
       } else {
         const canDays= recentAvg>0 ? Math.floor(remain/recentAvg) : Infinity;
         const runout= isFinite(canDays)? addDaysStr(latest,canDays) : "—";
-        const monthEnd=addDaysStr(latest,daysLeftMonth);
+        const monthEnd=state.budgetYear+'-'+String(state.budgetMonth).padStart(2,'0')+'-'+String(lastDay).padStart(2,'0');
         if(canDays<daysLeftMonth){
           const shortfall=Math.max(0, recentAvg*daysLeftMonth - remain);
           html+=`<div class="budget-ai alert"><span class="bi-ic">⚠️</span><div>`+

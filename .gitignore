@@ -48,3 +48,7 @@ shots/
 !映射/*.xlsx
 !产品主图.xlsx
 !Method1_映射候选.xlsx
+
+# 压缩前原图备份（本地留存，不入库）
+_bak_local_images_fullsize/
+_bak_pub_images_fullsize/

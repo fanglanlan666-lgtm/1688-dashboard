@@ -347,6 +347,7 @@
         <div id="budgetTotal" class="budget-total">¥0.00</div>
       </div>
     </div>
+    <div id="dkKeyGroups" class="dk-keygroups" style="margin-top:10px;display:none"></div>
     <div class="panel-budget-actions">
       <button class="btn primary" id="btnBudgetOk">确认预算</button>
       <button class="btn" id="btnBudgetExport">导出预算配置</button>
@@ -694,7 +695,7 @@ function allRows(){ return DATA.concat(LOCAL); }
 
 /* ============ 状态 ============ */
 const state = {
-  dateFrom:"", dateTo:"", planFilter:"", budgetYear:0, budgetMonth:0, planBudgets:{}, consMetrics:["cost"], targetFrom:"", targetTo:"",
+  dateFrom:"", dateTo:"", planFilter:"", budgetYear:0, budgetMonth:0, planBudgets:{}, dkKeyGroups:[], consMetrics:["cost"], targetFrom:"", targetTo:"",
 
   grain:"商品", trend:"cost", detailFrom:"", detailTo:"", detailPid:"", expanded:{}, view:"marketing", planView:"amount", consumeView:"struct",
   sortKey2:{ overview:{key:"date",dir:1}, plan:{key:"cost",dir:-1}, prod:{key:"cost",dir:-1}, daily:{key:"date",dir:1} }
@@ -1036,22 +1037,33 @@ function bmKey(y,m){ return y+"-"+String(m).padStart(2,"0"); }
 function getBudgets(){ try{ return JSON.parse(localStorage.getItem("dashBudgets")||"{}"); }catch(e){ return {}; } }
 function saveBudgets(){
   const all=getBudgets();
-  all[bmKey(state.budgetYear,state.budgetMonth)]={plans:{...state.planBudgets}};
+  all[bmKey(state.budgetYear,state.budgetMonth)]={plans:{...state.planBudgets}, keyGroups:state.dkKeyGroups};
   try{ localStorage.setItem("dashBudgets", JSON.stringify(all)); }catch(e){}
 }
 function loadBudget(){
   // 优先级：localStorage(按月) > data.js(window.DASHBOARD_BUDGET 作为首月基线) > 默认空
   const all=getBudgets();
   const k=bmKey(state.budgetYear,state.budgetMonth);
-  if(all[k] && all[k].plans){ state.planBudgets=all[k].plans; return; }
+  if(all[k] && all[k].plans){ state.planBudgets=all[k].plans; state.dkKeyGroups=normalizeKeyGroups(all[k].keyGroups); return; }
   try{
     if(window.DASHBOARD_BUDGET && window.DASHBOARD_BUDGET.plans){
       let pb=window.DASHBOARD_BUDGET.plans||{};
       if(pb["解决方案"]!==undefined){ if(!pb["大客方案"]) pb["大客方案"]=pb["解决方案"]; delete pb["解决方案"]; }
-      state.planBudgets=pb; return;
+      state.planBudgets=pb;
+      state.dkKeyGroups=normalizeKeyGroups(window.DASHBOARD_BUDGET.keyGroups);
+      return;
     }
   }catch(e){}
   state.planBudgets={};
+  state.dkKeyGroups=defaultKeyGroups();
+}
+/* 大客方案 · 重点商品组：固定 3 组，各组可单独设名称与预算，预算从大客方案总预算内切分 */
+function defaultKeyGroups(){ return [{name:"重点商品组1",budget:0},{name:"重点商品组2",budget:0},{name:"重点商品组3",budget:0}]; }
+function normalizeKeyGroups(arr){
+  const base=defaultKeyGroups();
+  if(!Array.isArray(arr)) return base;
+  for(let i=0;i<3;i++){ if(arr[i]){ base[i].name=arr[i].name||base[i].name; base[i].budget=Number(arr[i].budget)||0; } }
+  return base;
 }
 function budgetTotal(){ return Object.values(state.planBudgets).reduce((s,v)=>s+(Number(v)||0),0); }
 /* 本月剩余可投放天数（含今天）：用于「建议日预算 = 剩余预算 / 剩余天数」。
@@ -1075,9 +1087,32 @@ function renderBudgetSettings(){
     const p=e.target.dataset.plan; state.planBudgets[p]=Number(e.target.value)||0;
     saveBudgets();                       // 自动保存，刷新看板无需手动确认
     document.getElementById("budgetTotal").textContent=money(budgetTotal());
-    renderBudget();
+    renderKeyGroups(); renderBudget();
   }));
   document.getElementById("budgetTotal").textContent=money(budgetTotal());
+  renderKeyGroups();
+}
+function renderKeyGroups(){
+  const box=document.getElementById("dkKeyGroups");
+  const allPlans=[...new Set(dimRows("计划").map(r=>r.plan))];
+  const dkName = allPlans.includes("大客方案")?"大客方案":(allPlans.includes("解决方案")?"解决方案":null);
+  if(!dkName){ box.style.display="none"; return; }
+  box.style.display="";
+  const dk=Number(state.planBudgets[dkName]||0);
+  const groups=state.dkKeyGroups;
+  const sumG=groups.reduce((s,g)=>s+(Number(g.budget)||0),0);
+  const normal=dk-sumG, half=dk*0.5;
+  let warn="";
+  if(dk>0){
+    groups.forEach(g=>{ const gb=Number(g.budget)||0; if(gb>half){ warn+=`<div class="up" style="margin:2px 0">⚠️ 重点商品组「${g.name||'未命名'}」预算 ${money(gb)} 已超过大客方案总预算的50%（${money(half)}），占比 ${((gb/dk)*100).toFixed(0)}%</div>`; } });
+    if(sumG>dk){ warn+=`<div class="up" style="margin:2px 0">⚠️ 重点商品组合计 ${money(sumG)} 已超越大客方案总预算 ${money(dk)}，普通商品预算为负（${money(normal)}）</div>`; }
+  }
+  box.innerHTML=`<div class="kpi-row-title" style="margin:4px 0 6px">大客方案 · 重点商品组预算（从大客方案总预算内切分）</div>`+
+    groups.map((g,i)=>`<span class="pb-item"><label>组${i+1}名称</label><input type="text" class="kg-name" data-i="${i}" value="${g.name||''}" style="width:110px"></span><span class="pb-item"><label>组${i+1}预算(元)</label><input type="number" min="0" class="kg-budget" data-i="${i}" value="${g.budget||''}" style="width:110px"></span>`).join(" ")+
+    `<div style="margin-top:6px;font-size:13px">普通商品预算（自动）= 大客方案 ${money(dk)} − 重点商品组合计 ${money(sumG)} = <b style="color:${normal<0?'#e5484d':'var(--text)'}">${money(normal)}</b></div>`+
+    (dk<=0?'<div style="margin-top:4px;font-size:12px;color:var(--sub)">提示：先在上方设置「大客方案」预算，即可切分重点商品组。</div>':(warn?`<div style="margin-top:4px">${warn}</div>`:`<div style="margin-top:4px;font-size:12px;color:var(--sub)">提示：任一重点商品组预算超过大客方案总预算的50%将触发预警。</div>`));
+  box.querySelectorAll(".kg-name").forEach(inp=>inp.addEventListener("input",e=>{ const i=+e.target.dataset.i; state.dkKeyGroups[i].name=e.target.value; saveBudgets(); }));
+  box.querySelectorAll(".kg-budget").forEach(inp=>inp.addEventListener("input",e=>{ const i=+e.target.dataset.i; state.dkKeyGroups[i].budget=Number(e.target.value)||0; saveBudgets(); renderKeyGroups(); renderBudget(); }));
 }
 function renderBudget(){
   const rows=budgetMonthRows();
@@ -1094,8 +1129,9 @@ function renderBudget(){
   const plans=Object.keys(state.planBudgets).filter(p=>(state.planBudgets[p]||0)>0);
   if(plans.length){
     html+='<div class="kpi-row-title" style="margin-bottom:6px">各计划预算执行</div>';
-    plans.forEach(p=>{
-      const pc=sum(rows.filter(r=>r.plan===p),"cost");
+  plans.forEach(p=>{
+    const isDK=(p==="大客方案"||p==="解决方案");
+    const pc=sum(rows.filter(r=>r.plan===p),"cost");
       const pb=state.planBudgets[p];
       const r=Math.min(pc/pb,1), over=pc>pb;
       const remain=pb-pc, dl=remainingDaysOfMonth();
@@ -1103,6 +1139,18 @@ function renderBudget(){
       html+=`<div style="margin:8px 0"><div class="barwrap" style="margin:4px 0"><div class="barfill ${over?'over':''}" style="width:${(r*100).toFixed(1)}%"></div></div>`+
         `<div class="progress-txt">${p}：已消耗 <b>${money(pc)}</b> / ${money(pb)}（<b>${(pc/pb*100).toFixed(1)}%</b>${over?'，<span class="up">超支 '+money(pc-pb)+'</span>':'，剩余 '+money(remain)}）</div>`+
         `<div style="margin-top:3px;font-size:12px;color:var(--sub)">剩余预算 <b style="color:var(--text)">${money(Math.max(remain,0))}</b> · 剩余 <b style="color:var(--text)">${dl}</b> 天（至月底） · <span style="color:var(--orange);font-weight:700">建议日预算 ¥${Math.round(sug).toLocaleString()}</span>${remain<=0?'（已超支，建议先追加预算）':''}</div></div>`;
+    if(isDK && state.dkKeyGroups && state.dkKeyGroups.length){
+      const groups=state.dkKeyGroups;
+      const sumG=groups.reduce((s,g)=>s+(Number(g.budget)||0),0);
+      const normal=pb-sumG, dl2=remainingDaysOfMonth(), half=pb*0.5;
+      let gHtml=groups.map(g=>{
+        const gb=Number(g.budget)||0, gsug=dl2>0?gb/dl2:0, over=gb>half;
+        return `<div style="margin:4px 0 4px 16px;font-size:12px">· ${g.name||'未命名'}：预算 <b>${money(gb)}</b> · 建议日预算 <b style="color:var(--orange)">¥${Math.round(gsug).toLocaleString()}</b>${over?' <span class="up">⚠️ 超50%预警（占 '+((gb/pb)*100).toFixed(0)+'%）</span>':''}</div>`;
+      }).join("");
+      const nsug=dl2>0?normal/dl2:0;
+      gHtml+=`<div style="margin:4px 0 4px 16px;font-size:12px">普通商品预算：<b style="color:${normal<0?'#e5484d':'var(--text)'}">${money(normal)}</b> · 建议日预算 <b style="color:var(--orange)">¥${Math.round(nsug).toLocaleString()}</b>${normal<0?' <span class="up">⚠️ 组预算合计超总预算</span>':''}</div>`;
+      html+=`<div style="margin:6px 0 2px;padding-left:10px;border-left:2px solid var(--line)">${gHtml}</div>`;
+    }
     });
   }
   /* —— 预算执行 AI：结合消耗趋势估算还能撑几天 —— */
@@ -3030,7 +3078,7 @@ document.getElementById("btnBudgetOk").onclick=()=>{
 };
 /* 预算配置导出 / 导入（永久保存方案） */
 function exportBudgetConfig(){
-  const cfg={total:budgetTotal(), plans:state.planBudgets||{}};
+  const cfg={total:budgetTotal(), plans:state.planBudgets||{}, keyGroups:state.dkKeyGroups};
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([JSON.stringify(cfg,null,2)],{type:"application/json"}));
   a.download="budget.json"; a.click();
@@ -3045,6 +3093,7 @@ document.getElementById("budgetFile").addEventListener("change",e=>{
     let pb=o.plans||{};
     if(pb["解决方案"]!==undefined){ if(!pb["大客方案"]) pb["大客方案"]=pb["解决方案"]; delete pb["解决方案"]; }
     state.planBudgets=pb;
+    if(Array.isArray(o.keyGroups)) state.dkKeyGroups=normalizeKeyGroups(o.keyGroups);
     saveBudgets(); renderBudgetSettings(); renderBudget(); renderAI();
     const hint=document.getElementById("budgetHint");
     if(hint){ hint.textContent="✓ 已导入预算配置（"+bmKey(state.budgetYear,state.budgetMonth)+"）"; setTimeout(()=>{ hint.textContent=""; }, 2200); }

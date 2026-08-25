@@ -1100,17 +1100,29 @@ function renderKeyGroups(){
   box.style.display="";
   const dk=Number(state.planBudgets[dkName]||0);
   const groups=state.dkKeyGroups;
+  const daysInMonth=new Date(state.budgetYear,state.budgetMonth,0).getDate();
+  const MIN_DAILY=100;                                   // 每个重点商品组最低日均预算
   const sumG=groups.reduce((s,g)=>s+(Number(g.budget)||0),0);
   const normal=dk-sumG, half=dk*0.5;
+  const minKeyMonthly=groups.length*MIN_DAILY*daysInMonth; // 各组按最低日均100所需月预算合计
   let warn="";
   if(dk>0){
-    groups.forEach(g=>{ const gb=Number(g.budget)||0; if(gb>half){ warn+=`<div class="up" style="margin:2px 0">⚠️ 重点商品组「${g.name||'未命名'}」预算 ${money(gb)} 已超过大客方案总预算的50%（${money(half)}），占比 ${((gb/dk)*100).toFixed(0)}%</div>`; } });
-    if(sumG>dk){ warn+=`<div class="up" style="margin:2px 0">⚠️ 重点商品组合计 ${money(sumG)} 已超越大客方案总预算 ${money(dk)}，普通商品预算为负（${money(normal)}）</div>`; }
+    // ① 各组最低日均 100 校验
+    groups.forEach(g=>{ const gb=Number(g.budget)||0;
+      if(gb>0 && gb/daysInMonth<MIN_DAILY) warn+=`<div class="up" style="margin:2px 0">⚠️ 重点商品组「${g.name||'未命名'}」月预算 ${money(gb)} 日均仅 ¥${Math.round(gb/daysInMonth)}，低于最低日均 ¥${MIN_DAILY}（建议月预算≥${money(MIN_DAILY*daysInMonth)}）</div>`;
+      if(gb>half) warn+=`<div class="up" style="margin:2px 0">⚠️ 重点商品组「${g.name||'未命名'}」预算 ${money(gb)} 已超过大客方案总预算的50%（${money(half)}），占比 ${((gb/dk)*100).toFixed(0)}%</div>`;
+    });
+    // ② 合计超过50% → 普通剩余很少
+    if(sumG>half) warn+=`<div class="up" style="margin:2px 0">⚠️ 重点商品组合计 ${money(sumG)} 已超过大客方案总预算的50%（${money(half)}），普通商品组剩余预算仅 ${money(Math.max(normal,0))}，偏少</div>`;
+    // ③ 合计超总预算
+    if(sumG>dk) warn+=`<div class="up" style="margin:2px 0">⚠️ 重点商品组合计 ${money(sumG)} 已超越大客方案总预算 ${money(dk)}，普通商品预算为负（${money(normal)}）</div>`;
+    // ④ 总预算偏低：连各组最低日均都养不起 → 建议减少组数
+    if(dk<=minKeyMonthly) warn+=`<div class="up" style="margin:2px 0">⚠️ 大客方案总预算 ${money(dk)} 偏低：仅 ${groups.length} 个重点商品组按最低日均 ¥${MIN_DAILY} 就需约 ${money(minKeyMonthly)}/月（日均 ¥${groups.length*MIN_DAILY}），普通商品组将无预算，<b>建议减少重点商品组数量</b>或追加总预算</div>`;
   }
-  box.innerHTML=`<div class="kpi-row-title" style="margin:4px 0 6px">大客方案 · 重点商品组预算（从大客方案总预算内切分）</div>`+
-    groups.map((g,i)=>`<span class="pb-item"><label>组${i+1}名称</label><input type="text" class="kg-name" data-i="${i}" value="${g.name||''}" style="width:110px"></span><span class="pb-item"><label>组${i+1}预算(元)</label><input type="number" min="0" class="kg-budget" data-i="${i}" value="${g.budget||''}" style="width:110px"></span>`).join(" ")+
+  box.innerHTML=`<div class="kpi-row-title" style="margin:4px 0 6px">大客方案 · 重点商品组预算（从大客方案总预算内切分 · 优先级：重点商品组优先，剩余归普通商品组）</div>`+
+    groups.map((g,i)=>`<span class="pb-item"><label>组${i+1}名称</label><input type="text" class="kg-name" data-i="${i}" value="${g.name||''}" style="width:100px"></span><span class="pb-item"><label>组${i+1}预算(元)</label><input type="number" min="0" class="kg-budget" data-i="${i}" value="${g.budget||''}" style="width:100px"></span><span class="pb-item" style="font-size:12px;color:var(--sub)">日均 ¥${Math.round((Number(g.budget)||0)/daysInMonth)}${((Number(g.budget)||0)>0 && (Number(g.budget)||0)/daysInMonth<MIN_DAILY)?' <span class="up">低于100</span>':''}</span>`).join(" ")+
     `<div style="margin-top:6px;font-size:13px">普通商品预算（自动）= 大客方案 ${money(dk)} − 重点商品组合计 ${money(sumG)} = <b style="color:${normal<0?'#e5484d':'var(--text)'}">${money(normal)}</b></div>`+
-    (dk<=0?'<div style="margin-top:4px;font-size:12px;color:var(--sub)">提示：先在上方设置「大客方案」预算，即可切分重点商品组。</div>':(warn?`<div style="margin-top:4px">${warn}</div>`:`<div style="margin-top:4px;font-size:12px;color:var(--sub)">提示：任一重点商品组预算超过大客方案总预算的50%将触发预警。</div>`));
+    (dk<=0?'<div style="margin-top:4px;font-size:12px;color:var(--sub)">提示：先在上方设置「大客方案」预算，即可切分重点商品组。</div>':(warn?`<div style="margin-top:4px">${warn}</div>`:`<div style="margin-top:4px;font-size:12px;color:var(--sub)">提示：各组日均建议≥¥100；重点商品组合计超50%或总预算偏低会触发预警。</div>`));
   box.querySelectorAll(".kg-name").forEach(inp=>inp.addEventListener("input",e=>{ const i=+e.target.dataset.i; state.dkKeyGroups[i].name=e.target.value; saveBudgets(); }));
   box.querySelectorAll(".kg-budget").forEach(inp=>inp.addEventListener("input",e=>{ const i=+e.target.dataset.i; state.dkKeyGroups[i].budget=Number(e.target.value)||0; saveBudgets(); renderKeyGroups(); renderBudget(); }));
 }
@@ -1143,16 +1155,24 @@ function renderBudget(){
       const groups=state.dkKeyGroups;
       const sumG=groups.reduce((s,g)=>s+(Number(g.budget)||0),0);
       const normal=pb-sumG, dl2=remainingDaysOfMonth(), half=pb*0.5;
+      const daysInMonth2=new Date(state.budgetYear,state.budgetMonth,0).getDate();
+      const MIN_DAILY2=100;
       let gHtml=groups.map(g=>{
-        const gb=Number(g.budget)||0, gsug=dl2>0?gb/dl2:0, over=gb>half;
-        return `<div style="margin:4px 0 4px 16px;font-size:12px">· ${g.name||'未命名'}：预算 <b>${money(gb)}</b> · 建议日预算 <b style="color:var(--orange)">¥${Math.round(gsug).toLocaleString()}</b>${over?' <span class="up">⚠️ 超50%预警（占 '+((gb/pb)*100).toFixed(0)+'%）</span>':''}</div>`;
+        const gb=Number(g.budget)||0, gdaily=daysInMonth2>0?gb/daysInMonth2:0, over=gb>half, low=gb>0 && gdaily<MIN_DAILY2;
+        return `<div style="margin:4px 0 4px 16px;font-size:12px">· ${g.name||'未命名'}：预算 <b>${money(gb)}</b> · 日均 <b>${money(gdaily)}</b>${over?' <span class="up">⚠️ 超50%预警（占 '+((gb/pb)*100).toFixed(0)+'%）</span>':''}${low?' <span class="up">⚠️ 日均低于'+MIN_DAILY2+'</span>':''}</div>`;
       }).join("");
+      // 重点商品组预警汇总（50% / 占满总预算 / 总预算偏低）
+      let gWarn="";
+      if(sumG>half) gWarn+=`<div class="up" style="margin:2px 0 4px 16px;font-size:12px">⚠️ 重点商品组合计 ${money(sumG)} 已超过总预算的50%（${money(half)}），普通商品组剩余仅 ${money(Math.max(normal,0))}</div>`;
+      if(normal<=0) gWarn+=`<div class="up" style="margin:2px 0 4px 16px;font-size:12px">⚠️ 重点商品组已占满总预算，普通商品组无预算，<b>建议减少重点商品组数量</b>或追加总预算</div>`;
+      const minKeyMonthly2=groups.length*MIN_DAILY2*daysInMonth2;
+      if(pb>0 && pb<=minKeyMonthly2) gWarn+=`<div class="up" style="margin:2px 0 4px 16px;font-size:12px">⚠️ 大客方案总预算 ${money(pb)} 偏低：${groups.length} 个重点商品组按最低日均 ¥${MIN_DAILY2} 就需约 ${money(minKeyMonthly2)}/月（日均 ¥${groups.length*MIN_DAILY2}），普通商品组将无预算，<b>建议减少重点商品组数量</b></div>`;
       // 普通商品建议日预算 = (普通商品月预算 − 大客方案本月已消耗) ÷ 剩余天数，
       // 与大客方案头行"剩余预算/建议日预算"口径一致（重点商品组视为独立预算、受保护，不扣其消耗）。
       const normalRemain=normal-pc;
       const nsug=dl2>0?Math.max(normalRemain,0)/dl2:0;
       gHtml+=`<div style="margin:4px 0 4px 16px;font-size:12px">普通商品预算：<b style="color:${normal<0?'#e5484d':'var(--text)'}">${money(normal)}</b> · 剩余 <b style="color:var(--text)">${money(Math.max(normalRemain,0))}</b> · 建议日预算 <b style="color:var(--orange)">¥${Math.round(nsug).toLocaleString()}</b>${normal<0?' <span class="up">⚠️ 组预算合计超总预算</span>':''}${normalRemain<0?' <span class="up">⚠️ 已消耗超普通预算</span>':''}</div>`;
-      html+=`<div style="margin:6px 0 2px;padding-left:10px;border-left:2px solid var(--line)">${gHtml}</div>`;
+      html+=`<div style="margin:6px 0 2px;padding-left:10px;border-left:2px solid var(--line)">${gHtml}${gWarn}</div>`;
     }
     });
   }

@@ -1147,8 +1147,11 @@ function renderBudget(){
         const gb=Number(g.budget)||0, gsug=dl2>0?gb/dl2:0, over=gb>half;
         return `<div style="margin:4px 0 4px 16px;font-size:12px">· ${g.name||'未命名'}：预算 <b>${money(gb)}</b> · 建议日预算 <b style="color:var(--orange)">¥${Math.round(gsug).toLocaleString()}</b>${over?' <span class="up">⚠️ 超50%预警（占 '+((gb/pb)*100).toFixed(0)+'%）</span>':''}</div>`;
       }).join("");
-      const nsug=dl2>0?normal/dl2:0;
-      gHtml+=`<div style="margin:4px 0 4px 16px;font-size:12px">普通商品预算：<b style="color:${normal<0?'#e5484d':'var(--text)'}">${money(normal)}</b> · 建议日预算 <b style="color:var(--orange)">¥${Math.round(nsug).toLocaleString()}</b>${normal<0?' <span class="up">⚠️ 组预算合计超总预算</span>':''}</div>`;
+      // 普通商品建议日预算 = (普通商品月预算 − 大客方案本月已消耗) ÷ 剩余天数，
+      // 与大客方案头行"剩余预算/建议日预算"口径一致（重点商品组视为独立预算、受保护，不扣其消耗）。
+      const normalRemain=normal-pc;
+      const nsug=dl2>0?Math.max(normalRemain,0)/dl2:0;
+      gHtml+=`<div style="margin:4px 0 4px 16px;font-size:12px">普通商品预算：<b style="color:${normal<0?'#e5484d':'var(--text)'}">${money(normal)}</b> · 剩余 <b style="color:var(--text)">${money(Math.max(normalRemain,0))}</b> · 建议日预算 <b style="color:var(--orange)">¥${Math.round(nsug).toLocaleString()}</b>${normal<0?' <span class="up">⚠️ 组预算合计超总预算</span>':''}${normalRemain<0?' <span class="up">⚠️ 已消耗超普通预算</span>':''}</div>`;
       html+=`<div style="margin:6px 0 2px;padding-left:10px;border-left:2px solid var(--line)">${gHtml}</div>`;
     }
     });
